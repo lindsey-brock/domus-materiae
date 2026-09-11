@@ -1,0 +1,1674 @@
+<title>Identità Domus Materiae</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap">
+<style>
+/* ============================================================
+   DOMUS MATERIAE — identity system
+   Palette, motion tokens and the nautilus construction are
+   inherited unchanged from nautilus-hero.html
+   ============================================================ */
+
+:root{
+  /* --- brand constants: identical in every theme --- */
+  --sky:#54BFEA;
+  --turquoise:#2FB4C6;
+  --aqua:#BFE9EE;
+  --nacre:#F3ECE2;
+  --blush:#E9CFC1;
+  --ink:#06232B;
+  --profondo:#0A4C5C;
+
+  --abete:#E4CBA4;
+  --larice:#C9975B;
+  --rovere:#9E7345;
+  --castagno:#7E5533;
+  --noce:#4E3421;
+
+  /* --- themed surfaces (light) --- */
+  --paper:#FAF6EF;
+  --surface:#F3ECE2;
+  --surface-2:#EDE3D5;
+  --text:#06232B;
+  --text-2:#4A5F66;
+  --text-3:#78888C;
+  --line:#DFD5C6;
+  --line-2:#C6B8A4;
+  --accent:#0A4C5C;
+  --accent-soft:#BFE9EE;
+  --code-bg:#EFE7DA;
+
+  /* --- Fibonacci spacing --- */
+  --s1:5px; --s2:8px; --s3:13px; --s4:21px; --s5:34px;
+  --s6:55px; --s7:89px; --s8:144px;
+
+  /* --- type scale: two steps = phi --- */
+  --f-2:13px; --f-1:15px; --f0:19px; --f1:24px;
+  --f2:31px; --f3:39px; --f4:50px; --f5:63px;
+
+  /* --- motion, from the hero --- */
+  --t-lines-out:4.2s;
+  --t-text-in:5s;
+  --ease-draw:cubic-bezier(.4,0,.2,1);
+  --ease-through:cubic-bezier(.2,.7,.2,1);
+}
+
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#04191F;
+    --surface:#082630;
+    --surface-2:#0C303C;
+    --text:#EFE7DA;
+    --text-2:#A6BCC1;
+    --text-3:#758C93;
+    --line:#123F4C;
+    --line-2:#1C5A6B;
+    --accent:#7ED3DE;
+    --accent-soft:#0F3B47;
+    --code-bg:#08252E;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#04191F;
+  --surface:#082630;
+  --surface-2:#0C303C;
+  --text:#EFE7DA;
+  --text-2:#A6BCC1;
+  --text-3:#758C93;
+  --line:#123F4C;
+  --line-2:#1C5A6B;
+  --accent:#7ED3DE;
+  --accent-soft:#0F3B47;
+  --code-bg:#08252E;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--text);
+  font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  font-size:var(--f0);
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--sky);color:#06232B}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+.mono,.lab,th,.ui{font-family:"Jost",ui-sans-serif,system-ui,"Helvetica Neue",sans-serif}
+
+/* ============ HERO — animation preserved verbatim ============ */
+.hero{
+  position:relative;touch-action:pan-y;
+  width:100%;
+  height:100vh;
+  height:100svh;          /* avoids the mobile URL-bar jump */
+  min-height:560px;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  isolation:isolate;
+  background:var(--sky);
+  color:#06232B;
+}
+.hero .wave{
+  position:absolute;inset:-25%;z-index:0;
+  background:linear-gradient(115deg,#54BFEA 0%,#2FB4C6 22%,#BFE9EE 40%,#F3ECE2 52%,#E9CFC1 60%,#7ED3DE 78%,#54BFEA 100%);
+  opacity:0;will-change:transform;
+  animation:hWaveIn 3s ease var(--t-lines-out) forwards, hWaveDrift 24s ease-in-out infinite alternate;
+}
+/* .stage carries the swell so the GL canvas and the SVG overlay scale as one object.
+   It is hero-sized, so the compositing layer stays bounded (a group sized to the
+   whole shell would ask for a ~9700px layer and tile). The canvas is oversampled 1.4x so it stays sharp at full swell. */
+.hero .stage{position:absolute;inset:0;z-index:1;transform-origin:center;
+  animation:hSwell 12s var(--ease-draw) 3.6s forwards, hSoften 4s ease var(--t-lines-out) forwards}
+.hero .glshell{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero .shell{position:absolute;inset:0;width:100%;height:100%}
+.hero .name{
+  position:relative;z-index:2;text-align:center;pointer-events:none;
+  opacity:0;filter:blur(14px);transform:scale(1.04);
+  animation:hThrough 2.6s var(--ease-through) var(--t-text-in) forwards;
+}
+.hero .name h1{
+  margin:0;font-weight:500;font-size:clamp(3.4rem,13vw,12rem);
+  line-height:.9;letter-spacing:.02em;
+}
+.hero .name p{
+  margin:.35em 0 0;font-weight:400;font-size:clamp(1.05rem,3.1vw,3rem);
+  letter-spacing:.42em;padding-left:.42em;
+}
+/* Inside the SVG, animate PAINT properties only. fill-opacity/stroke-opacity are
+   painted per element and never create a compositing layer, so no oversized
+   bounding box is ever allocated. The .7 and .9 alphas move into the stroke
+   colours so nothing looks different. */
+.hero .chamber{fill-opacity:0;animation:hFillIn 1.1s ease-out forwards}
+.hero .edge{fill:none;stroke:rgba(228,203,164,.78);stroke-width:1.2;stroke-opacity:0;
+  animation:hStrokeIn 1.1s ease-out forwards, hStrokeOut 1.8s ease var(--t-lines-out) forwards}
+.hero .septum{stroke:#E4CBA4;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-opacity:0;
+  animation:hStrokeIn .9s ease-out forwards, hStrokeOut 1.8s ease var(--t-lines-out) forwards}
+/* The shell's own spiral does not leave - it dims and stays, so the construction
+   the whole identity rests on is what survives the dissolve. */
+.hero .wall{fill:none;stroke:#fff;stroke-linecap:round;stroke-opacity:1;stroke-dasharray:1;stroke-dashoffset:1;
+  animation:hDraw 3.4s var(--ease-draw) forwards, hWallDim 2.4s ease var(--t-lines-out) forwards}
+/* Three tiers of linework, so the drawing has a hierarchy instead of one flat white:
+   the WALL is white (structure), the chamber DETAIL is Abete #E4CBA4 (material), and
+   the SEZIONE AUREA is Larice #C9975B (the ideal figure).
+   The gold ARC draws at strength, then leaves completely: the shell's own white
+   spiral is the only spiral that survives, so the two never compete.
+   The sezione aurea is carried by the phi squares alone, in Larice, brought up strongly
+   as the chambers fade. */
+.hero .gold{fill:none;stroke:#C9975B;stroke-opacity:.45;stroke-dasharray:1;stroke-dashoffset:1;
+  animation:hDraw 3s var(--ease-draw) 1.4s forwards, hStrokeOut 2.6s ease var(--t-lines-out) forwards}
+.hero .gold-rect{fill:none;stroke:#C9975B;stroke-opacity:0;
+  animation:hGoldRectIn 2.2s ease forwards}
+/* .lines and .whole stay un-animated on purpose: a group opacity or transform here
+   would promote a layer sized to the entire shell, which is the whole problem. */
+.hero .whole{transform-origin:center}
+
+@keyframes hFillIn{to{fill-opacity:1}}
+@keyframes hStrokeIn{to{stroke-opacity:1}}
+@keyframes hStrokeOut{to{stroke-opacity:0}}
+@keyframes hDraw{to{stroke-dashoffset:0}}
+@keyframes hWallDim{to{stroke-opacity:.24}}
+@keyframes hGoldRectIn{to{stroke-opacity:.6}}
+@keyframes hSwell{to{transform:scale(1.35) rotate(-6deg)}}
+@keyframes hWaveIn{to{opacity:.75}}
+@keyframes hSoften{to{opacity:.9}}
+@keyframes hWaveDrift{from{transform:translate3d(-8%,-5%,0)}to{transform:translate3d(8%,5%,0)}}
+@keyframes hThrough{to{opacity:1;filter:blur(0);transform:none}}
+
+/* ---- carousel: two hero options, swipe or arrow keys ---- */
+.track{position:absolute;inset:0;display:flex;will-change:transform}
+.scene{position:relative;flex:0 0 100%;height:100%;overflow:hidden;isolation:isolate;
+  display:grid;place-items:center}   /* the wordmark used to be centred by .hero's grid */
+.scene-rings{background:var(--ink)}
+.scene-tag{
+  position:absolute;z-index:3;left:var(--s5);top:var(--s5);
+  font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:#06232B;opacity:.5;
+}
+.scene-rings .scene-tag{color:var(--nacre);opacity:.55}
+.stage-rings{z-index:1;animation:none}
+.scene-rings.run .stage-rings{
+  animation:hSwell 12s var(--ease-draw) 3.6s forwards, hSoften 4s ease var(--t-lines-out) forwards}
+.scene-rings .name{opacity:0;filter:blur(14px);transform:scale(1.04);animation:none}
+.scene-rings.run .name{animation:hThrough 2.6s var(--ease-through) var(--t-text-in) forwards}
+.name-light,.name-light *{color:var(--nacre)}
+.foot-mid{display:flex;align-items:center;gap:var(--s3)}
+.dots{display:inline-flex;gap:7px;align-items:center}
+.dot{
+  width:7px;height:7px;padding:0;border-radius:50%;cursor:pointer;
+  border:1px solid currentColor;background:transparent;color:inherit;
+  transition:background .18s ease,transform .18s ease;
+}
+.dot[aria-selected="true"]{background:currentColor;transform:scale(1.25)}
+.dot:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.hero-foot{
+  position:absolute;z-index:3;left:0;right:0;bottom:var(--s4);
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:0 var(--s5);font-family:"Jost",sans-serif;font-size:var(--f-2);
+  letter-spacing:.16em;text-transform:uppercase;color:#06232B;
+  transition:color .45s ease;
+}
+.hero[data-scene="1"] .hero-foot{color:var(--nacre)}
+.hero[data-scene="1"] .replay{border-color:rgba(243,236,226,.34)}
+.hero[data-scene="1"] .replay:hover{background:rgba(243,236,226,.12);border-color:rgba(243,236,226,.6)}
+.hero-foot > span{opacity:.62}
+.replay{
+  font:inherit;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;border:1px solid rgba(6,35,43,.32);color:#06232B;
+  padding:7px 15px;cursor:pointer;
+  transition:background .18s ease,border-color .18s ease;
+}
+.replay:hover{background:rgba(6,35,43,.09);border-color:rgba(6,35,43,.6)}
+.replay:focus-visible{outline:2px solid #06232B;outline-offset:3px}
+
+/* ============ DOC LAYOUT ============ */
+.doc{
+  max-width:1240px;margin:0 auto;padding:var(--s6) var(--s5) var(--s8);
+  display:grid;gap:var(--s6);grid-template-columns:minmax(0,1fr);
+}
+@media(min-width:1060px){
+  .doc{grid-template-columns:196px minmax(0,1fr);gap:var(--s7);align-items:start}
+}
+.rail{display:none}
+@media(min-width:1060px){
+  .rail{
+    display:block;position:sticky;top:var(--s5);
+    font-family:"Jost",sans-serif;font-size:var(--f-2);
+  }
+}
+.rail ol{list-style:none;margin:0;padding:0;border-left:1px solid var(--line)}
+.rail a{
+  display:flex;gap:var(--s2);padding:6px 0 6px var(--s3);
+  color:var(--text-3);text-decoration:none;
+  border-left:1px solid transparent;margin-left:-1px;
+  transition:color .18s ease,border-color .18s ease;
+}
+.rail a:hover{color:var(--text)}
+.rail a.on{color:var(--text);border-left-color:var(--turquoise)}
+.rail .n{font-variant-numeric:tabular-nums;color:var(--text-3);min-width:1.6em}
+
+.stack{display:flex;flex-direction:column;gap:var(--s8);min-width:0}
+.sec{scroll-margin-top:var(--s4)}
+.sec-head{
+  display:grid;gap:var(--s3);
+  padding-bottom:var(--s4);margin-bottom:var(--s5);
+  border-bottom:1px solid var(--line);
+}
+.eyebrow{
+  font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--turquoise);
+}
+:root[data-theme="dark"] .eyebrow,
+:root:not([data-theme="light"]) .eyebrow{}
+.sec h3{margin:0;font-size:var(--f3);font-weight:300;letter-spacing:-.01em;line-height:1.08;text-wrap:balance}
+.lede{margin:0;max-width:62ch;color:var(--text-2);font-size:var(--f1);font-weight:300}
+.sec p{max-width:62ch}
+.sec h4{
+  font-family:"Jost",sans-serif;font-weight:500;font-size:var(--f-2);
+  letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);
+  margin:0 0 var(--s3);
+}
+.block{margin-top:var(--s6)}
+.block:first-of-type{margin-top:0}
+
+/* ============ GENERIC PIECES ============ */
+.grid{display:grid;gap:var(--s3)}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(148px,100%),1fr))}
+.g6{grid-template-columns:repeat(auto-fit,minmax(min(104px,100%),1fr))}
+
+.note{
+  font-family:"Jost",sans-serif;font-size:var(--f-2);color:var(--text-3);
+  line-height:1.7;max-width:60ch;
+}
+.rule-list{list-style:none;margin:var(--s3) 0 0;padding:0;display:grid;gap:var(--s2);max-width:62ch}
+.rule-list li{
+  display:grid;grid-template-columns:18px 1fr;gap:var(--s3);
+  font-family:"Jost",sans-serif;font-size:var(--f-1);line-height:1.6;color:var(--text-2);
+}
+.rule-list .y{color:var(--turquoise)}
+.rule-list .n{color:var(--larice)}
+
+table{border-collapse:collapse;width:100%;font-family:"Jost",sans-serif;font-size:var(--f-1)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+th{
+  text-align:left;font-weight:500;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--text-3);
+  padding:0 var(--s3) var(--s2) 0;border-bottom:1px solid var(--line-2);white-space:nowrap;
+}
+td{
+  padding:var(--s2) var(--s3) var(--s2) 0;border-bottom:1px solid var(--line);
+  color:var(--text-2);vertical-align:baseline;
+}
+td:first-child{color:var(--text)}
+.num{font-variant-numeric:tabular-nums;text-align:right;padding-right:var(--s4)}
+th.num{text-align:right;padding-right:var(--s4)}
+
+/* ============ 02 LOGO ============ */
+.lockups{display:grid;gap:var(--s3);grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))}
+.lock{
+  border:1px solid var(--line);display:flex;flex-direction:column;
+  background:var(--paper);
+}
+.lock .stage{
+  flex:1;display:grid;place-items:center;padding:var(--s5) var(--s4);min-height:186px;
+}
+.lock .cap{
+  font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-3);padding:var(--s2) var(--s3);border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:var(--s2);
+}
+.stage.on-sky{background:var(--sky)}
+.stage.on-ink{background:var(--ink)}
+.stage.on-nacre{background:var(--nacre)}
+
+/* the wordmark itself */
+.wm{display:grid;justify-items:center;line-height:1;text-align:center}
+.wm .d{
+  font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;
+  font-size:var(--wm,44px);letter-spacing:.015em;
+}
+.wm .m{
+  font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;
+  font-size:calc(var(--wm,44px) * .272);
+  letter-spacing:.42em;padding-left:.42em;margin-top:.34em;
+}
+.wm.ink,.wm.ink *{color:var(--ink)}
+.wm.light,.wm.light *{color:var(--nacre)}
+
+.lockup-h{display:flex;align-items:center;gap:var(--s3)}
+.lockup-v{display:grid;justify-items:center;gap:var(--s3)}
+.mark{display:block}
+
+.constr{
+  border:1px solid var(--line);background:var(--surface);
+  padding:var(--s5);display:grid;gap:var(--s4);
+}
+@media(min-width:820px){.constr{grid-template-columns:38.2% 1fr;align-items:center;gap:var(--s6)}}
+
+.sizes{display:flex;align-items:flex-end;gap:var(--s5);flex-wrap:wrap;padding:var(--s4) 0}
+.size-item{display:grid;gap:var(--s2);justify-items:center}
+.size-item .cap{font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.12em;color:var(--text-3);text-transform:uppercase}
+
+/* ============ 03 COLOR ============ */
+.sw{border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.sw .chip{height:104px;display:block}
+.sw .body{padding:var(--s3);display:grid;gap:2px}
+.sw .nm{font-family:"Cormorant Garamond",serif;font-size:var(--f1);font-weight:400;line-height:1.15}
+.sw .hex{font-family:"Jost",sans-serif;font-size:var(--f-2);letter-spacing:.06em;font-variant-numeric:tabular-nums;color:var(--text-2)}
+.sw .use{font-family:"Jost",sans-serif;font-size:11px;line-height:1.55;color:var(--text-3);margin-top:var(--s1)}
+.sw.tall .chip{height:130px}
+
+.ratio-bar{
+  display:flex;height:44px;border:1px solid var(--line);margin-top:var(--s3);
+  font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+}
+.ratio-bar span{display:grid;place-items:center;color:#06232B}
+.pass{color:var(--turquoise)}
+.fail{color:var(--larice)}
+
+/* ============ 04 TYPE ============ */
+.spec{border-top:1px solid var(--line);padding-top:var(--s3);margin-top:var(--s3)}
+.spec .glyphs{font-size:var(--f4);font-weight:300;line-height:1.1;letter-spacing:-.01em}
+.scale-row{
+  display:grid;grid-template-columns:74px 1fr;gap:var(--s3);align-items:baseline;
+  padding:var(--s2) 0;border-bottom:1px solid var(--line);
+}
+.scale-row .k{font-family:"Jost",sans-serif;font-size:11px;color:var(--text-3);letter-spacing:.1em;font-variant-numeric:tabular-nums}
+.scale-row .s{line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:300}
+
+/* ---- pagina d'esempio: la divisione φ e i passi Fibonacci applicati ---- */
+.pagemock{border:1px solid var(--line);background:var(--paper);padding:var(--s4);
+  display:grid;gap:var(--s5)}
+.pm-bar{display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--line);padding-bottom:var(--s3)}
+.pm-logo{font-family:"Cormorant Garamond",Georgia,serif;font-size:var(--f-1);letter-spacing:.14em}
+.pm-nav{display:flex;gap:var(--s2)}
+.pm-nav i{display:block;width:24px;height:4px;background:var(--line-2)}
+.pm-split{display:grid;align-items:start;gap:var(--s4);
+  grid-template-columns:calc(61.8% - var(--s4) * .618) calc(38.2% - var(--s4) * .382)}
+.pm-img{height:156px}
+.pm-aside{display:grid;gap:var(--s3)}
+.pm-h{font-family:"Cormorant Garamond",Georgia,serif;font-size:var(--f1);line-height:1.1}
+.pm-sub{font-family:"Jost",sans-serif;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text-3);margin-top:3px}
+.pm-spec{margin:0;display:grid;gap:5px;font-family:"Jost",sans-serif;font-size:11px}
+.pm-spec div{display:flex;justify-content:space-between;gap:var(--s3);
+  border-bottom:1px dotted var(--line);padding-bottom:4px}
+.pm-spec dt{color:var(--text-3)}
+.pm-spec dd{margin:0;color:var(--text);font-variant-numeric:tabular-nums}
+.pm-btn{font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.08em;
+  background:var(--sky);color:#06232B;padding:9px 12px;text-align:center}
+.pm-row{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+.pm-card{border:1px solid var(--line)}
+.pm-card span{display:block;height:54px}
+.pm-card b{display:block;font-family:"Jost",sans-serif;font-weight:400;font-size:10px;
+  letter-spacing:.06em;padding:var(--s2);color:var(--text-2)}
+.pm-measure{display:grid;gap:var(--s4);margin-top:calc(var(--s5) * -1 + var(--s2));
+  grid-template-columns:calc(61.8% - var(--s4) * .618) calc(38.2% - var(--s4) * .382)}
+.pm-measure span{position:relative;padding-top:6px;border-top:1px solid var(--turquoise);
+  font-family:"Jost",sans-serif;font-size:10px;letter-spacing:.12em;color:var(--turquoise)}
+.pm-measure span::before,.pm-measure span::after{content:"";position:absolute;top:-4px;
+  width:1px;height:9px;background:var(--turquoise)}
+.pm-measure span::before{left:0}
+.pm-measure span::after{right:0}
+@media(max-width:640px){
+  .pm-split,.pm-measure{grid-template-columns:1fr}
+  .pm-measure{display:none}
+}
+/* ============ 05 GOLDEN SYSTEM ============ */
+.phi-split{display:grid;gap:2px;height:120px;margin-top:var(--s3);
+  grid-template-columns:calc(61.8% - 1.24px) calc(38.2% - .76px)}
+.phi-split div{display:grid;place-items:center;font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#06232B}
+.fib{display:flex;align-items:flex-end;gap:var(--s2);margin-top:var(--s3);flex-wrap:wrap}
+.fib i{display:grid;gap:var(--s1);justify-items:center;font-style:normal}
+.fib b{display:block;background:var(--turquoise);width:22px}
+.fib span{font-family:"Jost",sans-serif;font-size:10px;color:var(--text-3);font-variant-numeric:tabular-nums}
+
+/* ============ 06 ICONS ============ */
+.icons{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
+  grid-template-columns:repeat(auto-fit,minmax(min(112px,100%),1fr))}
+.ico{background:var(--paper);padding:var(--s4) var(--s2);display:grid;gap:var(--s2);justify-items:center}
+.ico svg{stroke:var(--text);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.ico span{font-family:"Jost",sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);text-align:center}
+
+/* ---- header di pagina ---- */
+.hdr{border:1px solid var(--line);background:var(--paper);display:flex;align-items:center;
+  gap:var(--s4);padding:var(--s3) var(--s4);
+  width:max-content;min-width:100%}
+.hdr-brand{display:flex;align-items:center;gap:var(--s3);text-decoration:none;color:var(--text);flex:0 0 auto}
+.hdr-brand .wm{color:var(--text)}
+.hdr-nav{display:flex;gap:var(--s3);margin-left:auto}
+.hdr-nav a{white-space:nowrap;font-family:"Jost",sans-serif;font-size:var(--f-2);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text-2);text-decoration:none;
+  padding:7px 0;border-bottom:1px solid transparent;transition:color .18s ease}
+.hdr-nav a:hover{color:var(--text)}
+.hdr-nav a[aria-current="page"]{color:var(--text);border-bottom-color:var(--turquoise)}
+.hdr-end{display:flex;align-items:center;gap:var(--s3);flex:0 0 auto}
+.hdr-lang{font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.1em;color:var(--text-3);white-space:nowrap}
+.hdr-lang b{color:var(--text);font-weight:400}
+.hdr-lang a{color:var(--text-3);text-decoration:none}
+.hdr-lang a:hover{color:var(--text)}
+.hdr .btn{padding:9px 18px;white-space:nowrap}
+.hdr-mob{width:min(340px,100%);min-width:300px;border:1px solid var(--line);
+  background:var(--paper);display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s3);padding:var(--s3) var(--s4)}
+.hdr-mob .hdr-brand{min-width:0}
+/* the tap target never shrinks - it was collapsing and clipping past the edge */
+.burger{flex:0 0 auto;display:grid;gap:5px;background:none;border:0;padding:0;cursor:pointer}
+.burger i{display:block;width:22px;height:1px;background:var(--text)}
+
+/* ============ 07 COMPONENTS ============ */
+.btn{
+  font-family:"Jost",sans-serif;font-size:var(--f-1);font-weight:400;letter-spacing:.08em;
+  padding:12px 26px;border:1px solid transparent;cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;gap:var(--s2);
+  transition:background .18s ease,color .18s ease,border-color .18s ease;
+}
+.btn-primary{background:var(--sky);color:#06232B}
+.btn-primary:hover{background:var(--turquoise)}
+.btn-ghost{background:transparent;color:var(--text);border-color:var(--line-2)}
+.btn-ghost:hover{border-color:var(--text);background:var(--surface)}
+.btn-quiet{background:transparent;color:var(--accent);padding-left:0;padding-right:0;border-bottom:1px solid currentColor}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn-row{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:center}
+
+.field{display:grid;gap:6px;max-width:340px}
+.field label{font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+.field input,.field select{
+  font-family:"Jost",sans-serif;font-size:var(--f-1);color:var(--text);
+  background:var(--paper);border:1px solid var(--line-2);padding:11px var(--s3);
+  border-radius:0;width:100%;
+}
+.field input:focus{outline:none;border-color:var(--turquoise);box-shadow:0 0 0 3px var(--accent-soft)}
+.field .hint{font-family:"Jost",sans-serif;font-size:11px;color:var(--text-3)}
+
+.badge{
+  font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid var(--line-2);color:var(--text-2);display:inline-block;
+}
+.badge-cls{border-color:var(--turquoise);color:var(--turquoise)}
+.badge-cert{border-color:var(--rovere);color:var(--rovere)}
+.badge-stock{background:var(--accent-soft);border-color:transparent;color:var(--text)}
+
+.card{border:1px solid var(--line);display:flex;flex-direction:column;background:var(--paper)}
+.card .grainbox{height:132px;position:relative}
+.card .cbody{padding:var(--s4);display:grid;gap:var(--s3)}
+.card h5{margin:0;font-size:var(--f1);font-weight:400;line-height:1.2}
+.card .sub{font-family:"Jost",sans-serif;font-size:var(--f-2);color:var(--text-3);letter-spacing:.02em}
+.card dl{margin:0;display:grid;gap:4px;font-family:"Jost",sans-serif;font-size:var(--f-2)}
+.card dl div{display:flex;justify-content:space-between;gap:var(--s3);border-bottom:1px dotted var(--line);padding-bottom:4px}
+.card dt{color:var(--text-3)}
+.card dd{margin:0;color:var(--text);font-variant-numeric:tabular-nums}
+.card .price{
+  display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3);
+  border-top:1px solid var(--line-2);padding-top:var(--s3);
+}
+.card .price b{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:var(--f2)}
+.card .price small{font-family:"Jost",sans-serif;font-size:11px;color:var(--text-3);letter-spacing:.08em}
+
+/* ============ 08 MATERIAL ============ */
+.grain{position:relative;overflow:hidden}
+.grain::after{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(96deg,rgba(6,35,43,.13) 0 1px,rgba(6,35,43,0) 1px 5px),
+             repeating-linear-gradient(96deg,rgba(255,255,255,.16) 0 1px,rgba(255,255,255,0) 1px 13px);
+  mix-blend-mode:multiply;
+}
+.mat{border:1px solid var(--line);display:flex;flex-direction:column}
+.mat .grain{height:96px}
+.mat .mb{padding:var(--s3);display:grid;gap:3px}
+.mat .mn{font-size:var(--f-1);font-family:"Cormorant Garamond",serif}
+.mat .mx{font-family:"Jost",sans-serif;font-size:10px;color:var(--text-3);letter-spacing:.05em;font-variant-numeric:tabular-nums}
+
+/* ============ 10 VOICE ============ */
+.voice{display:grid;gap:var(--s3);grid-template-columns:repeat(auto-fit,minmax(min(258px,100%),1fr))}
+.vc{border-left:2px solid var(--line-2);padding-left:var(--s3);display:grid;gap:var(--s2)}
+.vc.good{border-left-color:var(--turquoise)}
+.vc.bad{border-left-color:var(--larice)}
+.vc .t{font-family:"Jost",sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3)}
+.vc q{font-size:var(--f1);font-weight:300;font-style:italic;quotes:"\201C" "\201D"}
+
+/* ============ APPENDIX ============ */
+pre{
+  margin:var(--s3) 0 0;background:var(--code-bg);border:1px solid var(--line);
+  padding:var(--s4);overflow-x:auto;
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:12.5px;line-height:1.75;color:var(--text-2);
+}
+pre b{color:var(--text);font-weight:400}
+pre i{color:var(--text-3);font-style:normal}
+
+footer{
+  border-top:1px solid var(--line);padding:var(--s5);
+  font-family:"Jost",sans-serif;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--text-3);
+  display:flex;justify-content:space-between;gap:var(--s3);flex-wrap:wrap;
+  max-width:1240px;margin:0 auto;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .hero .chamber{animation:none;fill-opacity:1}
+  .hero .edge,.hero .septum{animation:none;stroke-opacity:0}
+  .hero .wall{animation:none;stroke-opacity:.24}
+  .hero .gold{animation:none;stroke-opacity:0}
+  .hero .gold-rect{animation:none;stroke-opacity:.6}
+  .hero .whole{animation:none}
+  .hero .stage{animation:none;transform:scale(1.35) rotate(-6deg);opacity:.9}
+  .hero .wave{animation:none;opacity:.75}
+  .hero .name{animation:none;opacity:1;filter:none;transform:none}
+  *{transition-duration:.01ms !important}
+}
+</style>
+
+<!-- ============================== HERO ============================== -->
+<section class="hero" aria-roledescription="carousel" aria-label="Hero options">
+  <div class="track" id="track">
+
+    <article class="scene scene-shell" aria-label="Opzione 1 — Nautilus">
+      <div class="wave" aria-hidden="true"></div>
+      <div class="stage" aria-hidden="true">
+        <svg class="shell" id="shell" viewBox="-560 -470 1120 940" preserveAspectRatio="xMidYMid slice"></svg>
+      </div>
+      <div class="name">
+        <h1>Domus</h1>
+        <p>Materiae</p>
+      </div>
+      <span class="scene-tag">Nautilus — la proporzione</span>
+    </article>
+
+    <article class="scene scene-rings" aria-label="Opzione 2 — Anelli">
+      <div class="stage stage-rings" aria-hidden="true"></div>
+      <div class="name name-light">
+        <h1>Domus</h1>
+        <p>Materiae</p>
+      </div>
+      <span class="scene-tag">Anelli — la materia</span>
+    </article>
+
+  </div>
+  <div class="hero-foot">
+    <span class="foot-l">Legname &amp; costruzioni in legno</span>
+    <span class="foot-mid">
+      <button class="replay" id="replay" type="button">&#8635;&nbsp; Rivedi</button>
+      <span class="dots" id="dots" role="tablist" aria-label="Opzione hero"></span>
+    </span>
+    <span class="foot-r">Identità v1.0</span>
+  </div>
+</section>
+
+<!-- ============================== DOC ============================== -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <defs>
+    <!-- Marchio: costruzione di Fibonacci con la sezione aurea a vista.
+         scale(1,-1) porta la spirale dallo stesso lato del logo originale:
+         spira in basso a destra, arco che spazza in alto a sinistra.
+         Il tratto della spirale si eredita dall'elemento <svg> che lo usa. -->
+    <g id="dm-mark">
+      <g transform="scale(1,-1)">
+        <g stroke="currentColor" style="stroke-opacity:var(--dm-lines,.4)" stroke-width=".24" fill="none">
+          <rect x="-15" y="-3" width="13" height="13"/>
+          <rect x="-2" y="2" width="8" height="8"/>
+          <rect x="1" y="-3" width="5" height="5"/>
+          <rect x="-2" y="-3" width="3" height="3"/>
+          <rect x="-2" y="0" width="2" height="2"/>
+        </g>
+        <path d="M0 0 A1 1 0 0 1 1 1 A1 1 0 0 1 0 2 A2 2 0 0 1 -2 0 A3 3 0 0 1 1 -3 A5 5 0 0 1 6 2 A8 8 0 0 1 -2 10 A13 13 0 0 1 -15 -3" fill="none" stroke="currentColor" stroke-linecap="round"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
+<div class="doc">
+  <nav class="rail" aria-label="Sections">
+    <ol>
+      <li><a href="#s01"><span class="n">01</span> Marchio</a></li>
+      <li><a href="#s02"><span class="n">02</span> Colore</a></li>
+      <li><a href="#s03"><span class="n">03</span> Tipografia</a></li>
+      <li><a href="#s04"><span class="n">04</span> Sistema aureo</a></li>
+      <li><a href="#s05"><span class="n">05</span> Icone</a></li>
+      <li><a href="#s06"><span class="n">06</span> Componenti</a></li>
+      <li><a href="#s07"><span class="n">07</span> Voce</a></li>
+      <li><a href="#app"><span class="n">—</span> Token</a></li>
+    </ol>
+  </nav>
+
+  <main class="stack">
+
+  <!-- ===== 02 LOGO ===== -->
+  <section class="sec" id="s01">
+    <div class="sec-head">
+      <div class="eyebrow">§ 01 — Marchio</div>
+    </div>
+
+    <div class="block">
+      <h4>Lockup approvati</h4>
+      <div class="lockups">
+
+        <div class="lock">
+          <div class="stage on-sky">
+            <div class="lockup-v">
+              <svg class="mark" width="118" height="76" viewBox="-15.8 -10.8 22.6 14.6" fill="none" stroke-width="0.618" style="color:#06232B" aria-hidden="true"><use href="#dm-mark"/></svg>
+              <div class="wm ink" style="--wm:40px"><span class="d">DOMUS</span><span class="m">MATERIAE</span></div>
+            </div>
+          </div>
+          <div class="cap"><span>Primario — verticale</span><span>Campo Sky</span></div>
+        </div>
+
+        <div class="lock">
+          <div class="stage on-nacre">
+            <div class="lockup-h">
+              <svg class="mark" width="76" height="49" viewBox="-15.8 -10.8 22.6 14.6" fill="none" stroke-width="0.618" style="color:#0A4C5C" aria-hidden="true"><use href="#dm-mark"/></svg>
+              <div class="wm" style="--wm:30px;justify-items:start;text-align:left;color:var(--ink)"><span class="d">DOMUS</span><span class="m">MATERIAE</span></div>
+            </div>
+          </div>
+          <div class="cap"><span>Orizzontale</span><span>Campo Madreperla</span></div>
+        </div>
+
+        <div class="lock">
+          <div class="stage on-ink">
+            <div class="lockup-v">
+              <svg class="mark" width="92" height="59" viewBox="-15.8 -10.8 22.6 14.6" fill="none" stroke-width="0.618" style="color:#54BFEA" aria-hidden="true"><use href="#dm-mark"/></svg>
+              <div class="wm light" style="--wm:34px"><span class="d">DOMUS</span><span class="m">MATERIAE</span></div>
+            </div>
+          </div>
+          <div class="cap"><span>In negativo</span><span>Campo Inchiostro</span></div>
+        </div>
+
+        <div class="lock">
+          <div class="stage on-sky" style="background:var(--surface)">
+            <svg class="mark" width="96" height="96" viewBox="-16.2 -15.2 23.4 23.4" fill="none" stroke-width="0.618" style="color:#06232B" aria-hidden="true"><rect x="-16.2" y="-15.2" width="23.4" height="23.4" fill="#54BFEA"/><use href="#dm-mark"/></svg>
+          </div>
+          <div class="cap"><span>Timbro / avatar</span><span>Quadrato, solo simbolo</span></div>
+        </div>
+
+
+        <div class="lock">
+          <div class="stage on-nacre">
+            <div class="wm" style="--wm:34px;color:var(--ink)"><span class="d">DOMUS</span><span class="m">MATERIAE</span></div>
+          </div>
+          <div class="cap"><span>Solo logotipo</span><span>Documenti, fatture</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="block">
+      <h4>Costruzione e area di rispetto</h4>
+      <div class="constr">
+        <svg viewBox="-16.5 -11.5 24 16" style="width:100%;height:auto;max-height:230px" aria-label="Costruzione del marchio su quadrati di Fibonacci">
+          <g transform="scale(1,-1)">
+            <g fill="none" stroke="var(--line-2)" stroke-width=".16">
+              <rect x="0" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/>
+              <rect x="-2" y="0" width="2" height="2"/><rect x="-2" y="-3" width="3" height="3"/>
+              <rect x="1" y="-3" width="5" height="5"/><rect x="-2" y="2" width="8" height="8"/>
+              <rect x="-15" y="-3" width="13" height="13"/>
+            </g>
+            <path d="M0 0 A1 1 0 0 1 1 1 A1 1 0 0 1 0 2 A2 2 0 0 1 -2 0 A3 3 0 0 1 1 -3 A5 5 0 0 1 6 2 A8 8 0 0 1 -2 10 A13 13 0 0 1 -15 -3" fill="none" stroke="var(--turquoise)" stroke-width="0.618" stroke-linecap="round"/>
+          </g>
+          <g fill="var(--text-3)" font-family="Jost, sans-serif" font-size="1.05">
+            <text x="-9.4" y="-4.4">13</text><text x="1.2" y="-6.8">8</text>
+            <text x="3.1" y="0.2">5</text><text x="-1.2" y="1.2">3</text>
+          </g>
+        </svg>
+        <div>
+          <ul class="rule-list">
+            <li><span class="y">→</span><span><b>Griglia.</b> Quadrati di 1, 1, 2, 3, 5, 8, 13 unità. Il rettangolo d'ingombro è 21 × 13 u — un rettangolo aureo.</span></li>
+            <li><span class="y">→</span><span><b>Spessore.</b> 1 u ÷ φ, cioè 0,618 u alla scala del marchio. Mai scalare il tratto indipendentemente dall'arco.</span></li>
+            <li><span class="y">→</span><span><b>Area di rispetto.</b> 3 u su ogni lato — la larghezza del quarto quadrato. Nulla vi entra, nemmeno il bordo pagina.</span></li>
+            <li><span class="y">→</span><span><b>Distanza nel lockup.</b> Dal simbolo al logotipo = 2 u in orizzontale, 3 u in verticale.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h4>Dimensioni minime</h4>
+      <div class="sizes">
+        <div class="size-item">
+          <svg class="mark" width="132" height="85" viewBox="-15.8 -10.8 22.6 14.6" fill="none" stroke-width="0.618" style="color:var(--text)" aria-hidden="true"><use href="#dm-mark"/></svg>
+          <span class="cap">Schermo · 132 px</span>
+        </div>
+        <div class="size-item">
+          <svg class="mark" width="64" height="41" viewBox="-15.8 -10.8 22.6 14.6" fill="none" stroke-width="0.95" style="color:var(--text)" aria-hidden="true"><use href="#dm-mark"/></svg>
+          <span class="cap">Minimo schermo · 64 px</span>
+        </div>
+        <div class="size-item">
+          <svg class="mark" width="32" height="21" viewBox="-15.8 -10.8 22.6 14.6" fill="none" stroke-width="1.6" style="color:var(--text);--dm-lines:0" aria-hidden="true"><use href="#dm-mark"/></svg>
+          <span class="cap">Favicon · 32 px</span>
+        </div>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Applicazione</th><th class="num">Minimo</th><th>Spessore</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td>Lockup completo, schermo</td><td class="num">96 px di larghezza</td><td class="num">0.618 u</td><td>Il peso di costruzione. Sotto i 96 px, solo simbolo</td></tr>
+            <tr><td>Solo simbolo, schermo</td><td class="num">64 px di larghezza</td><td class="num">0.95 u</td><td>Prima correzione — la spirale interna inizia a chiudersi</td></tr>
+            <tr><td>Favicon</td><td class="num">32 px di larghezza</td><td class="num">1.6 u</td><td>Solo spirale, senza costruzione; i due archi più interni si possono omettere</td></tr>
+            <tr><td>Lockup completo, stampa</td><td class="num">28 mm di larghezza</td><td class="num">0.618 u</td><td>Offset e digitale, ~0,25 pt</td></tr>
+            <tr><td>Incisione laser / CNC</td><td class="num">18 mm di larghezza</td><td class="num">1.0 u</td><td>~0,8 mm, solo simbolo</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ===== 03 COLOR ===== -->
+  <section class="sec" id="s02">
+    <div class="sec-head">
+      <div class="eyebrow">§ 02 — Colore</div>
+      <h3>Sei colori di marca, cinque essenze</h3>
+      <p class="lede">I sei colori base arrivano invariati dall'hero. Descrivono la madreperla — l'interno della conchiglia — e sono fondi, non colori da testo. A far leggere ci pensano l'Inchiostro e un verde-azzurro profondo derivato.</p>
+    </div>
+
+    <div class="block">
+      <h4>Palette base</h4>
+      <div class="grid g3">
+        <div class="sw tall"><span class="chip" style="background:#54BFEA"></span><div class="body"><span class="nm">Sky</span><span class="hex">#54BFEA · 84 191 234</span><span class="use">Il colore di campo del marchio. Tile del logo, pulsanti primari, grandi campiture. Regge il testo inchiostro a 8,6:1.</span></div></div>
+        <div class="sw tall"><span class="chip" style="background:#2FB4C6"></span><div class="body"><span class="nm">Turchese</span><span class="hex">#2FB4C6 · 47 180 198</span><span class="use">Il registro più profondo. Stati hover, filetti che devono vedersi, occhielli di sezione, segni dei grafici.</span></div></div>
+        <div class="sw tall"><span class="chip" style="background:#BFE9EE"></span><div class="body"><span class="nm">Acqua</span><span class="hex">#BFE9EE · 191 233 238</span><span class="use">Tinta chiara. Anelli di focus, badge di disponibilità, righe selezionate, richiami discreti.</span></div></div>
+        <div class="sw tall"><span class="chip" style="background:#F3ECE2"></span><div class="body"><span class="nm">Madreperla</span><span class="hex">#F3ECE2 · 243 236 226</span><span class="use">La carta. Pannelli, zebratura delle tabelle, superficie di lavoro del tema chiaro.</span></div></div>
+        <div class="sw tall"><span class="chip" style="background:#E9CFC1"></span><div class="body"><span class="nm">Incarnato</span><span class="hex">#E9CFC1 · 233 207 193</span><span class="use">La cerniera tra conchiglia e legno. Da usare dove la palette deve scaldarsi senza virare al marrone.</span></div></div>
+        <div class="sw tall"><span class="chip" style="background:#06232B"></span><div class="body"><span class="nm">Inchiostro</span><span class="hex">#06232B · 6 35 43</span><span class="use">Tutto il testo corrente, tutti i titoli, i campi in negativo. Un nero-verde, mai un nero neutro.</span></div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h4>Derivato — l'unica aggiunta</h4>
+      <div class="grid g2">
+        <div class="sw"><span class="chip" style="background:#0A4C5C"></span><div class="body"><span class="nm">Profondo</span><span class="hex">#0A4C5C · 10 76 92</span><span class="use">Link, pulsanti discreti, testo interattivo. Il turchese su madreperla è solo 2,1:1 e non può reggere il testo — Profondo è la stessa famiglia cromatica a 8,1:1.</span></div></div>
+        <div>
+          <p class="note" style="margin-top:0"><b style="color:var(--text)">Perché serve.</b> La palette dell'hero è pensata per grandi campi luminosi. Portata a 15 px nel testo d'interfaccia non supera nessuna soglia di contrasto. Profondo è l'unico colore aggiunto ai sei originali, ed esiste solo perché il testo interattivo resti nella tinta del marchio pur restando leggibile.</p>
+          <p class="note"><b style="color:var(--text)">Tema scuro.</b> Profondo si inverte in <b style="color:var(--text)">#7ED3DE</b> — lo stop intermedio già presente nel gradiente dell'hero. Nessuna tinta nuova.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h4>Estensione legno</h4>
+      <p class="note" style="margin-bottom:var(--s3)">Cinque toni d'essenza per superfici prodotto, filtri e immagini di categoria. Sono finiture, mai colori d'interfaccia — non portano mai testo corrente e non compaiono nel logo. Il Larice compare solo nella sezione aurea dell'hero.</p>
+      <div class="grid g6">
+        <div class="mat"><span class="grain" style="background:#E4CBA4"></span><div class="mb"><span class="mn">Abete</span><span class="mx">#E4CBA4 · 450 kg/m³</span></div></div>
+        <div class="mat"><span class="grain" style="background:#C9975B"></span><div class="mb"><span class="mn">Larice</span><span class="mx">#C9975B · 590 kg/m³</span></div></div>
+        <div class="mat"><span class="grain" style="background:#9E7345"></span><div class="mb"><span class="mn">Rovere</span><span class="mx">#9E7345 · 720 kg/m³</span></div></div>
+        <div class="mat"><span class="grain" style="background:#7E5533"></span><div class="mb"><span class="mn">Castagno</span><span class="mx">#7E5533 · 590 kg/m³</span></div></div>
+        <div class="mat"><span class="grain" style="background:#4E3421"></span><div class="mb"><span class="mn">Noce</span><span class="mx">#4E3421 · 680 kg/m³</span></div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h4>Proporzione</h4>
+      <div class="ratio-bar" aria-label="Recommended colour proportion">
+        <span style="flex:0 0 61.8%;background:#FAF6EF">Carta 61,8%</span>
+        <span style="flex:0 0 23.6%;background:#F3ECE2">Madreperla 23,6%</span>
+        <span style="flex:0 0 9.0%;background:#54BFEA">Sky 9%</span>
+        <span style="flex:0 0 5.6%;background:#2FB4C6">5,6%</span>
+      </div>
+      <p class="note" style="margin-top:var(--s3)">Una pagina è quasi tutta carta. Sky compare una o due volte — l'hero, una sola call to action. Quando due elementi Sky sono visibili insieme, uno dei due è sbagliato.</p>
+    </div>
+
+    <div class="block">
+      <h4>Contrasto — misurato, non supposto</h4>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Primo piano</th><th>Fondo</th><th class="num">Rapporto</th><th>Esito</th></tr></thead>
+          <tbody>
+            <tr><td>Inchiostro #06232B</td><td>Madreperla #F3ECE2</td><td class="num">13.96:1</td><td class="pass">Ok — testo corrente</td></tr>
+            <tr><td>Inchiostro #06232B</td><td>Acqua #BFE9EE</td><td class="num">12.79:1</td><td class="pass">Ok — testo corrente</td></tr>
+            <tr><td>Inchiostro #06232B</td><td>Incarnato #E9CFC1</td><td class="num">11.14:1</td><td class="pass">Ok — testo corrente</td></tr>
+            <tr><td>Inchiostro #06232B</td><td>Sky #54BFEA</td><td class="num">8.60:1</td><td class="pass">Ok — pulsanti, hero</td></tr>
+            <tr><td>Profondo #0A4C5C</td><td>Madreperla #F3ECE2</td><td class="num">8.13:1</td><td class="pass">Ok — link</td></tr>
+            <tr><td>Inchiostro #06232B</td><td>Turchese #2FB4C6</td><td class="num">6.51:1</td><td class="pass">Ok — etichette ≥ 15 px</td></tr>
+            <tr><td>Bianco #FFFFFF</td><td>Turchese #2FB4C6</td><td class="num">2.51:1</td><td class="fail">No — mai bianco su turchese</td></tr>
+            <tr><td>Turchese #2FB4C6</td><td>Madreperla #F3ECE2</td><td class="num">2.14:1</td><td class="fail">No — solo segni decorativi</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 04 TYPE ===== -->
+  <section class="sec" id="s03">
+    <div class="sec-head">
+      <div class="eyebrow">§ 03 — Tipografia</div>
+      <h3>Cormorant parla, Jost misura</h3>
+      <p class="lede">Cormorant Garamond è la voce — viene dall'hero ed è il logotipo. Jost si occupa di tutto ciò che contiene un numero. L'accostamento non è arbitrario: Jost discende dal Futura, ed è proprio il sans geometrico del logo originale che va a sostituire.</p>
+    </div>
+
+    <div class="grid g2">
+      <div>
+        <h4>Cormorant Garamond — display e testo</h4>
+        <div class="spec">
+          <div class="glyphs" style="font-weight:300">Domus Materiae</div>
+          <div class="glyphs" style="font-weight:400">Rovere di Slavonia</div>
+          <div class="glyphs" style="font-weight:500">Lamellare GL24h</div>
+          <div class="glyphs" style="font-weight:400;font-style:italic">Capriata a due falde</div>
+        </div>
+        <p class="note" style="margin-top:var(--s3)">Pesi 300 / 400 / 500 e corsivo 400. Occhio medio piccolo, quindi mai sotto i 17 px. Titoli a 300 con crenatura −0,01 em; solo il logotipo usa il 500.</p>
+      </div>
+      <div>
+        <h4>Jost — etichette, dati, interfaccia</h4>
+        <div class="spec ui">
+          <div class="glyphs" style="font-family:Jost,sans-serif;font-weight:300">100 × 200 × 6000</div>
+          <div class="glyphs" style="font-family:Jost,sans-serif;font-weight:400">C24 · GL24h · PEFC</div>
+          <div class="glyphs" style="font-family:Jost,sans-serif;font-weight:500;letter-spacing:.14em;font-size:var(--f1);text-transform:uppercase">Scheda tecnica</div>
+        </div>
+        <p class="note" style="margin-top:var(--s3)">Pesi 300 / 400 / 500. Tutte le etichette maiuscole hanno crenatura .14 em. Ogni colonna di cifre usa <span class="mono" style="color:var(--text)">font-variant-numeric: tabular-nums</span> — le quote devono allinearsi lungo la scheda tecnica.</p>
+      </div>
+    </div>
+
+    <div class="block">
+      <h4>Scala — due passi fanno φ</h4>
+      <div class="scale-row"><span class="k">63 / f5</span><span class="s" style="font-size:63px">Legname strutturale</span></div>
+      <div class="scale-row"><span class="k">50 / f4</span><span class="s" style="font-size:50px">Legname strutturale</span></div>
+      <div class="scale-row"><span class="k">39 / f3</span><span class="s" style="font-size:39px">Legname strutturale</span></div>
+      <div class="scale-row"><span class="k">31 / f2</span><span class="s" style="font-size:31px">Legname strutturale certificato</span></div>
+      <div class="scale-row"><span class="k">24 / f1</span><span class="s" style="font-size:24px">Legname strutturale certificato PEFC</span></div>
+      <div class="scale-row"><span class="k">19 / f0</span><span class="s" style="font-size:19px;font-weight:400">Legname strutturale certificato PEFC — corpo del testo</span></div>
+      <div class="scale-row"><span class="k">15 / f−1</span><span class="s ui" style="font-size:15px;font-family:Jost,sans-serif">Interfaccia, tabelle, schede tecniche</span></div>
+      <div class="scale-row"><span class="k">13 / f−2</span><span class="s ui" style="font-size:13px;font-family:Jost,sans-serif;letter-spacing:.02em">Note a piè di pagina, didascalie, unità di misura</span></div>
+      <p class="note" style="margin-top:var(--s3)">Rapporto φ<sup>1/2</sup> = 1,272, quindi due passi qualsiasi danno esattamente la sezione aurea. 63 ÷ 39 = 1,615. Il testo è 19 px con interlinea 1,62, misura massima 62 caratteri.</p>
+    </div>
+
+    <div class="block">
+      <h4>Regole</h4>
+      <ul class="rule-list">
+        <li><span class="y">→</span><span>I titoli usano <span class="mono" style="color:var(--text)">text-wrap: balance</span>. Un titolo su due righe non lascia mai una parola isolata.</span></li>
+        <li><span class="y">→</span><span>Nomi prodotto in Cormorant 400. Quote, classi e codici sempre in Jost, anche dentro una frase in Cormorant.</span></li>
+        <li><span class="y">→</span><span>Corsivo solo per specie e latino — <i>Quercus robur</i>, <i>Picea abies</i>. Mai per enfasi.</span></li>
+        <li><span class="y">→</span><span><b>Il logotipo è l'eccezione.</b> DOMUS / MATERIAE è un marchio disegnato, non testo: MATERIAE scende sotto i 17 px per costruzione (7 px nell'header). La regola dei 17 px vale per tutto il resto.</span></li>
+        <li><span class="n">✕</span><span>Nessun terzo carattere. Niente Cormorant sotto i 17 px. Niente Cormorant tutto maiuscolo — il logotipo escluso.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== 05 GOLDEN SYSTEM ===== -->
+  <section class="sec" id="s04">
+    <div class="sec-head">
+      <div class="eyebrow">§ 04 — Sistema aureo</div>
+      <h3>La spirale come motore d'impaginazione</h3>
+      <p class="lede">La costruzione del marchio è anche quella della pagina. Le colonne si dividono secondo φ, le spaziature seguono Fibonacci, e il tasso di apertura della conchiglia — 3× per giro, non il 6,9× aureo — è l'unico punto in cui il sistema si allontana deliberatamente dall'ideale.</p>
+    </div>
+
+    <div class="grid g2">
+      <div>
+        <h4>La divisione φ — 61,8 / 38,2</h4>
+        <div class="phi-split">
+          <div style="background:var(--aqua)">Contenuto 61,8</div>
+          <div style="background:var(--blush)">Laterale 38,2</div>
+        </div>
+        <p class="note" style="margin-top:var(--s3)">Ogni impaginazione in due parti usa questo rapporto: immagine prodotto e scheda tecnica, articolo e barra laterale, testo hero e modulo. Le metà uguali non si usano da nessuna parte.</p>
+      </div>
+      <div>
+        <h4>Spaziatura — Fibonacci, in px</h4>
+        <div class="fib">
+          <i><b style="height:5px"></b><span>5</span></i>
+          <i><b style="height:8px"></b><span>8</span></i>
+          <i><b style="height:13px"></b><span>13</span></i>
+          <i><b style="height:21px"></b><span>21</span></i>
+          <i><b style="height:34px"></b><span>34</span></i>
+          <i><b style="height:55px"></b><span>55</span></i>
+          <i><b style="height:89px"></b><span>89</span></i>
+          <i><b style="height:144px"></b><span>144</span></i>
+        </div>
+        <p class="note" style="margin-top:var(--s3)">5 e 8 sono interni al componente. 13 e 21 separano i componenti. 34 e 55 separano i blocchi. 89 e 144 separano le sezioni. Nessun valore intermedio è ammesso.</p>
+      </div>
+    </div>
+
+    <div class="block">
+      <h4>La griglia applicata — pagina prodotto</h4>
+      <div class="pagemock">
+        <div class="pm-bar">
+          <span class="pm-logo">DOMUS MATERIAE</span>
+          <span class="pm-nav" aria-hidden="true"><i></i><i></i><i></i></span>
+        </div>
+        <div class="pm-split">
+          <div class="pm-img grain" style="background:#E4CBA4"></div>
+          <aside class="pm-aside">
+            <div>
+              <div class="pm-h">Trave lamellare</div>
+              <div class="pm-sub">Abete rosso · GL24h</div>
+            </div>
+            <dl class="pm-spec">
+              <div><dt>Sezione</dt><dd>100 × 200 mm</dd></div>
+              <div><dt>Lunghezza</dt><dd>6000 mm</dd></div>
+              <div><dt>Umidità</dt><dd>12 ± 2 %</dd></div>
+            </dl>
+            <div class="pm-btn">Richiedi preventivo</div>
+          </aside>
+        </div>
+        <div class="pm-measure" aria-hidden="true">
+          <span>Contenuto 61,8</span><span>Laterale 38,2</span>
+        </div>
+        <div class="pm-row">
+          <div class="pm-card"><span class="grain" style="background:#C9975B"></span><b>Larice</b></div>
+          <div class="pm-card"><span class="grain" style="background:#9E7345"></span><b>Rovere</b></div>
+          <div class="pm-card"><span class="grain" style="background:#7E5533"></span><b>Castagno</b></div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:var(--s3)">L'immagine prodotto e la scheda tecnica stanno in rapporto 61,8 / 38,2: mai a metà. Ogni distanza viene dalla scala — 34 tra i blocchi, 21 tra le colonne, 13 dentro la scheda, 8 nell'etichetta della card. Nessun valore intermedio.</p>
+    </div>
+
+    <div class="block">
+      <h4>La costante di avvolgimento</h4>
+      <div class="grid g2">
+        <div>
+          <p>Un nautilus reale si apre di circa 3× per giro; una vera spirale aurea si apre di 6,9×. L'hero disegna la conchiglia reale e vi sovrappone la costruzione ideale — le due si conciliano scalando l'arco aureo perché il suo estremo cada sul raggio esterno della conchiglia.</p>
+          <p class="note">Quella tensione è la tesi del marchio in un'immagine: la proporzione ideale e la materia che la rispetta solo per approssimazione. Tenere entrambe. Mai ridisegnare l'hero con una spirale aurea pura.</p>
+        </div>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>Costante</th><th class="num">Valore</th><th>Dove</th></tr></thead>
+            <tbody>
+              <tr><td>Espansione per giro</td><td class="num">3.00</td><td>Crescita della conchiglia per giro</td></tr>
+              <tr><td>Giri disegnati</td><td class="num">5.15</td><td>Conchiglia hero — l'ultimo giro supera ogni angolo</td></tr>
+              <tr><td>Setti per giro</td><td class="num">12</td><td>Numero di camere</td></tr>
+              <tr><td>Anticipo del setto</td><td class="num">0.60 rad</td><td>Inclinazione in avanti sulla parete esterna — 1,15 camere di sfalsamento, più una curvatura di 0,55</td></tr>
+              <tr><td>Raggio interno</td><td class="num">8.43 u</td><td>Dove inizia la spirale</td></tr>
+              <tr><td>Raggio esterno</td><td class="num">≈ 2420 u</td><td>viewBox 1120 × 940, semidiagonale 731 u</td></tr>
+              <tr><td>Raggio di copertura</td><td class="num">806 u</td><td>RMAX ÷ giro — il valore che deve superare la cornice</td></tr>
+              <tr><td>Ritaglio cornice</td><td class="num">1120 × 940</td><td>clipPath sul viewBox — i giri oltre non vengono mai rasterizzati</td></tr>
+              <tr><td>φ</td><td class="num">1.618</td><td>Impaginazione, scala tipografica, tratto</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 06 ICONS ===== -->
+  <section class="sec" id="s05">
+    <div class="sec-head">
+      <div class="eyebrow">§ 05 — Icone</div>
+      <h3>Un peso, una griglia, terminali tondi</h3>
+      <p class="lede">Griglia 24 × 24, tratto 1,4 u, terminali e giunti tondi — gli stessi dei setti dell'hero. Disegnate dal piazzale, non da un set generico: ciò che l'azienda tiene davvero a magazzino, lavora, certifica e consegna.</p>
+    </div>
+    <div class="icons">
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M3 8 10 5 21 8 14 11Z"/><path d="M3 8v6l11 3v-6"/><path d="M14 17 21 14V8"/></svg><span>Trave</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="1"/><path d="M5 10q5-1.6 14 0M5 14q5 1.6 14 0"/></svg><span>Tavola</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx=".6"/><rect x="3" y="10" width="18" height="4" rx=".6"/><rect x="3" y="16" width="18" height="4" rx=".6"/></svg><span>Lamellare</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="1"/><path d="M12 3v3l5 1.8v4.4L12 14v7"/></svg><span>Incastro</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M2 19h20M2 19 12 5l10 14M12 5v14M7 12l5 7M17 12l-5 7"/></svg><span>Capriata</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2"/><circle cx="11" cy="12.6" r="5.6"/><circle cx="10.4" cy="13" r="2.4"/><path d="M12 2.9 11.2 7"/></svg><span>Anelli</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M12 3c0 0 6 7 6 10.4A6 6 0 0 1 6 13.4C6 10 12 3 12 3Z"/><path d="M6.8 15h10.4"/></svg><span>Umidità</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="1.6"/><path d="M12 2.4v2.4M12 19.2v2.4M2.4 12h2.4M19.2 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7"/></svg><span>Sega</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M12 2.2 20 5.2v6c0 5-3.6 8.7-8 11-4.4-2.3-8-6-8-11v-6Z"/><path d="M12 8c3 1 3.4 4.2 0 6.2-3.4-2-3-5.2 0-6.2ZM12 8.6v6.8"/></svg><span>Certificato</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><rect x="1.4" y="6" width="13" height="9" rx=".8"/><path d="M14.4 9H18l3.2 3.4V15h-6.8Z"/><circle cx="5.6" cy="17.4" r="2.1"/><circle cx="17.2" cy="17.4" r="2.1"/></svg><span>Consegna</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx=".6"/><path d="M6 8v3M10 8v4.4M14 8v3M18 8v4.4"/></svg><span>Misura</span></div>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M13.2 11.6a.9.9 0 0 1 .9.9.9.9 0 0 1-.9.9 1.8 1.8 0 0 1-1.8-1.8 2.7 2.7 0 0 1 2.7-2.7 4.5 4.5 0 0 1 4.5 4.5 7.2 7.2 0 0 1-7.2 7.2 11.7 11.7 0 0 1-11.7-11.7"/></svg><span>Spirale</span></div>
+    </div>
+    <ul class="rule-list">
+      <li><span class="y">→</span><span>Il tratto non scala: a 48 px resta 1,4 u, a 20 px sale a 1,6 u perché la forma regga.</span></li>
+      <li><span class="y">→</span><span>Le icone usano <span class="mono" style="color:var(--text)">currentColor</span> — ereditano il colore del testo, mai un esadecimale fisso.</span></li>
+      <li><span class="n">✕</span><span>Niente icone piene, niente bicolore, nessuna icona dentro un cerchio colorato.</span></li>
+    </ul>
+  </section>
+
+  <!-- ===== 07 COMPONENTS ===== -->
+  <section class="sec" id="s06">
+    <div class="sec-head">
+      <div class="eyebrow">§ 06 — Componenti</div>
+      <h3>Angoli vivi, bordi a filetto</h3>
+      <p class="lede">Nulla in questo sistema ha raggi di curvatura. Il legno si taglia a squadro e si accatasta a squadro, e l'interfaccia lo dice. La profondità nasce da un filetto di 1 px e da un cambio di fondo, mai da un'ombra.</p>
+    </div>
+
+    <div class="block">
+      <h4>Header di pagina</h4>
+      <div class="scroll">
+        <header class="hdr">
+          <a class="hdr-brand" href="#s06">
+            <svg class="mark" width="66" height="43" viewBox="-15.8 -10.8 22.6 14.6" fill="none"
+                 stroke-width="0.618" style="color:var(--accent)" aria-hidden="true"><use href="#dm-mark"/></svg>
+            <span class="wm" style="--wm:26px;justify-items:start;text-align:left"><span class="d">DOMUS</span><span class="m">MATERIAE</span></span>
+          </a>
+          <nav class="hdr-nav" aria-label="Principale">
+            <a href="#s06">Essenze</a>
+            <a href="#s06" aria-current="page">Strutturale</a>
+            <a href="#s06">Lavorazioni</a>
+            <a href="#s06">Progetti</a>
+            <a href="#s06">Contatti</a>
+          </nav>
+          <span class="hdr-end">
+            <span class="hdr-lang"><b>IT</b> / <a href="#s06">EN</a></span>
+            <a class="btn btn-primary" href="#s06">Preventivo</a>
+          </span>
+        </header>
+      </div>
+      <div class="scroll" style="margin-top:var(--s3)">
+      <div class="hdr-mob">
+        <a class="hdr-brand" href="#s06">
+          <svg class="mark" width="56" height="36" viewBox="-15.8 -10.8 22.6 14.6" fill="none"
+               stroke-width="0.618" style="color:var(--accent)" aria-hidden="true"><use href="#dm-mark"/></svg>
+          <span class="wm" style="--wm:22px;justify-items:start;text-align:left"><span class="d">DOMUS</span><span class="m">MATERIAE</span></span>
+        </a>
+        <button class="burger" type="button" aria-label="Apri il menu"><i></i><i></i><i></i></button>
+      </div>
+      </div>
+      <p class="note" style="margin-top:var(--s3)">Fisso in alto, chiuso da un filetto di 1 px: nessun fondo pieno, nessuna ombra. La voce attiva è sottolineata in turchese — l'unico turchese della pagina. Nell'header si usa il lockup orizzontale completo, costruzione aurea inclusa: a 66 px il simbolo la regge. Il lockup non scende sotto i 96 px di larghezza (§ 01). Sotto gli 860 px il menu diventa un pannello a tutta altezza.</p>
+    </div>
+
+    <div class="block">
+      <h4>Pulsanti</h4>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="#s06">Richiedi preventivo</a>
+        <a class="btn btn-ghost" href="#s06">Scarica scheda tecnica</a>
+        <a class="btn btn-quiet" href="#s06">Vedi tutte le essenze</a>
+        <button class="btn btn-primary" disabled>Non disponibile</button>
+      </div>
+      <p class="note" style="margin-top:var(--s3)">Un solo pulsante primario per vista. Il primario è Sky con testo Inchiostro (8,6:1), in hover passa a Turchese. Le etichette sono verbi e dicono esattamente cosa succede.</p>
+    </div>
+
+    <div class="block">
+      <h4>Campi e badge</h4>
+      <div class="grid g2">
+        <div style="display:grid;gap:var(--s4)">
+          <div class="field">
+            <label for="len">Lunghezza</label>
+            <input id="len" type="text" value="6000 mm" inputmode="numeric">
+            <span class="hint">Taglio su misura da 1000 a 13500 mm, passo 100 mm</span>
+          </div>
+          <div class="field">
+            <label for="ess">Essenza</label>
+            <select id="ess">
+              <option>Abete rosso — Picea abies</option>
+              <option>Larice — Larix decidua</option>
+              <option>Rovere — Quercus robur</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;gap:var(--s3);align-content:start">
+          <div class="btn-row">
+            <span class="badge badge-cls">C24</span>
+            <span class="badge badge-cls">GL24h</span>
+            <span class="badge badge-cert">PEFC 100%</span>
+            <span class="badge badge-cert">CE EN 14080</span>
+            <span class="badge badge-stock">In magazzino</span>
+            <span class="badge">Su ordinazione</span>
+          </div>
+          <p class="note">I badge sono fattuali, mai promozionali. Classe di resistenza in turchese, certificazione in rovere, disponibilità in acqua. Un badge non riconducibile a una norma o a un dato di magazzino non va sul sito.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h4>Scheda prodotto</h4>
+      <div class="grid g3">
+        <article class="card">
+          <div class="grainbox grain" style="background:#E4CBA4"></div>
+          <div class="cbody">
+            <div><h5>Trave lamellare</h5><span class="sub">Abete rosso · <i>Picea abies</i></span></div>
+            <dl>
+              <div><dt>Sezione</dt><dd>100 × 200 mm</dd></div>
+              <div><dt>Lunghezza</dt><dd>6000 mm</dd></div>
+              <div><dt>Classe</dt><dd>GL24h</dd></div>
+              <div><dt>Umidità</dt><dd>12 ± 2 %</dd></div>
+              <div><dt>Massa volumica</dt><dd>450 kg/m³</dd></div>
+            </dl>
+            <div class="btn-row"><span class="badge badge-cert">CE EN 14080</span><span class="badge badge-stock">In magazzino</span></div>
+            <div class="price"><b>€ 38,40</b><small>al metro · IVA escl.</small></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="grainbox grain" style="background:#C9975B"></div>
+          <div class="cbody">
+            <div><h5>Tavolame da esterno</h5><span class="sub">Larice · <i>Larix decidua</i></span></div>
+            <dl>
+              <div><dt>Sezione</dt><dd>28 × 145 mm</dd></div>
+              <div><dt>Lunghezza</dt><dd>4000 mm</dd></div>
+              <div><dt>Classe</dt><dd>C24</dd></div>
+              <div><dt>Durabilità</dt><dd>Classe 3–4</dd></div>
+              <div><dt>Massa volumica</dt><dd>590 kg/m³</dd></div>
+            </dl>
+            <div class="btn-row"><span class="badge badge-cert">PEFC 100%</span><span class="badge">Su ordinazione</span></div>
+            <div class="price"><b>€ 12,90</b><small>al metro · IVA escl.</small></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="grainbox grain" style="background:#9E7345"></div>
+          <div class="cbody">
+            <div><h5>Massello per strutture</h5><span class="sub">Rovere · <i>Quercus robur</i></span></div>
+            <dl>
+              <div><dt>Sezione</dt><dd>120 × 120 mm</dd></div>
+              <div><dt>Lunghezza</dt><dd>3000 mm</dd></div>
+              <div><dt>Classe</dt><dd>D30</dd></div>
+              <div><dt>Durabilità</dt><dd>Classe 2</dd></div>
+              <div><dt>Massa volumica</dt><dd>720 kg/m³</dd></div>
+            </dl>
+            <div class="btn-row"><span class="badge badge-cert">CE EN 14081</span><span class="badge badge-stock">In magazzino</span></div>
+            <div class="price"><b>€ 74,00</b><small>al metro · IVA escl.</small></div>
+          </div>
+        </article>
+      </div>
+      <p class="note" style="margin-top:var(--s3)">Disponibilità e prezzi di esempio, mostrati per illustrare l'impaginazione. L'ordine delle voci è fisso — sezione, lunghezza, classe, poi le proprietà del materiale — così chi confronta due schede legge la stessa riga nello stesso punto.</p>
+    </div>
+
+    <div class="block">
+      <h4>Tabella tecnica</h4>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Essenza</th><th>Nome botanico</th><th class="num">Massa volumica</th><th class="num">Durabilità EN 350</th><th>Impiego tipico</th></tr></thead>
+          <tbody>
+            <tr><td>Abete rosso</td><td><i>Picea abies</i></td><td class="num">450 kg/m³</td><td class="num">4</td><td>Strutture interne, lamellare, carpenteria</td></tr>
+            <tr><td>Larice</td><td><i>Larix decidua</i></td><td class="num">590 kg/m³</td><td class="num">3–4</td><td>Rivestimenti esterni, decking, serramenti</td></tr>
+            <tr><td>Rovere</td><td><i>Quercus robur</i></td><td class="num">720 kg/m³</td><td class="num">2</td><td>Travi a vista, pavimenti, opere idrauliche</td></tr>
+            <tr><td>Castagno</td><td><i>Castanea sativa</i></td><td class="num">590 kg/m³</td><td class="num">2</td><td>Pergole, staccionate, strutture non trattate</td></tr>
+            <tr><td>Noce</td><td><i>Juglans regia</i></td><td class="num">680 kg/m³</td><td class="num">3</td><td>Falegnameria d'arredo, finiture interne</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+      <!-- ===== 10 VOICE ===== -->
+  <section class="sec" id="s07">
+    <div class="sec-head">
+      <div class="eyebrow">§ 07 — Voce</div>
+      <h3>Specifici, in due lingue</h3>
+      <p class="lede">L'italiano è primario, l'inglese secondario. Si scrivono allo stesso modo: prima la misura, l'aggettivo per ultimo o per niente.</p>
+    </div>
+    <div class="voice">
+      <div class="vc good"><span class="t">Sì</span><q>Trave lamellare GL24h, 100 × 200 mm, umidità 12 ± 2 %.</q><span class="note">Da questa sola frase il cliente può ordinare.</span></div>
+      <div class="vc bad"><span class="t">No</span><q>Travi di altissima qualità, lavorate con passione artigianale.</q><span class="note">Qui non c'è nulla di verificabile, ordinabile o confrontabile.</span></div>
+      <div class="vc good"><span class="t">Sì</span><q>Consegna in cantiere entro 5 giorni lavorativi su tutto il Nord Italia.</q><span class="note">Una promessa con un numero e un confine.</span></div>
+      <div class="vc bad"><span class="t">No</span><q>Consegne rapide in tutta Italia!</q><span class="note">Nessun punto esclamativo, in tutto il sistema.</span></div>
+    </div>
+    <ul class="rule-list">
+      <li><span class="y">→</span><span>Unità sempre spaziate e metriche: <span class="mono" style="color:var(--text)">100 × 200 mm</span>, <span class="mono" style="color:var(--text)">450 kg/m³</span>. Segno di moltiplicazione ×, non la lettera x.</span></li>
+      <li><span class="y">→</span><span>Virgola decimale e punto per le migliaia: <span class="mono" style="color:var(--text)">€ 38,40</span> · <span class="mono" style="color:var(--text)">13.500 mm</span>. Le pagine in inglese invertono entrambi.</span></li>
+      <li><span class="y">→</span><span>Norme citate per esteso alla prima occorrenza — EN 14080, EN 14081, EN 350 — poi solo per numero.</span></li>
+      <li><span class="n">✕</span><span>Niente punti esclamativi. Niente “soluzioni”. Nessun prestito dall'inglese dove esiste un termine italiano.</span></li>
+    </ul>
+  </section>
+
+  <!-- ===== APPENDIX ===== -->
+  <section class="sec" id="app">
+    <div class="sec-head">
+      <div class="eyebrow">Appendice</div>
+      <h3>Token</h3>
+      <p class="lede">Copiare questo blocco nel progetto. I sei colori di marca e i due token di movimento sono identici, byte per byte, al sorgente dell'hero.</p>
+    </div>
+<pre><i>/* marca — non modificare */</i>
+<b>--sky</b>:#54BFEA;      <b>--turquoise</b>:#2FB4C6;  <b>--aqua</b>:#BFE9EE;
+<b>--nacre</b>:#F3ECE2;    <b>--blush</b>:#E9CFC1;      <b>--ink</b>:#06232B;
+<b>--profondo</b>:#0A4C5C; <i>/* derivato: testo interattivo */</i>
+
+<i>/* legno — solo superfici, mai testo */</i>
+<b>--abete</b>:#E4CBA4; <b>--larice</b>:#C9975B; <b>--rovere</b>:#9E7345;
+<b>--castagno</b>:#7E5533; <b>--noce</b>:#4E3421;
+
+<i>/* spaziatura — Fibonacci */</i>
+<b>--s1</b>:5px;  <b>--s2</b>:8px;  <b>--s3</b>:13px; <b>--s4</b>:21px;
+<b>--s5</b>:34px; <b>--s6</b>:55px; <b>--s7</b>:89px; <b>--s8</b>:144px;
+
+<i>/* tipografia — rapporto 1,272, due passi = φ */</i>
+<b>--f-2</b>:13px; <b>--f-1</b>:15px; <b>--f0</b>:19px; <b>--f1</b>:24px;
+<b>--f2</b>:31px;  <b>--f3</b>:39px;  <b>--f4</b>:50px; <b>--f5</b>:63px;
+<b>--font-display</b>:"Cormorant Garamond",Georgia,serif;
+<b>--font-ui</b>:"Jost",ui-sans-serif,system-ui,sans-serif;
+
+<i>/* movimento — da nautilus-hero.html */</i>
+<b>--t-lines-out</b>:4.2s;
+<b>--t-text-in</b>:5s;
+<b>--ease-draw</b>:cubic-bezier(.4,0,.2,1);
+<b>--ease-through</b>:cubic-bezier(.2,.7,.2,1);
+
+<i>/* geometria */</i>
+<b>--phi</b>:1.618;  <b>--whorl</b>:3.0;  <b>--turns</b>:5.15;  <b>--septa</b>:12;
+<b>--radius</b>:0;   <i>/* nulla in questo sistema è arrotondato */</i></pre>
+  </section>
+
+  </main>
+</div>
+
+<footer>
+  <span>Domus Materiae — Sistema di identità v1.0</span>
+  <span>Palette, tipografia e movimento derivati da nautilus-hero</span>
+  <span>10.09.2026</span>
+</footer>
+
+<script>
+/* ===== HERO — nautilus construction, unchanged from source ===== */
+(function(){
+  const svg = document.getElementById('shell');
+  if(!svg) return;
+
+  /* ================= GL shell =================
+     The shell is rendered per pixel rather than as filled paths. A height field -
+     chamber dome + septum ridge + outer wall - yields surface normals, and those
+     drive diffuse + specular + ambient occlusion + a thin-film iridescence term,
+     which is what a photograph of nacre actually shows and what stacked gradients
+     cannot reproduce.
+     Two consequences worth knowing: the shader is scale-free, so the shell fills any
+     viewport with no geometry to overrun the frame; and there are no paths to
+     rasterise, so the compositing limits in 08 do not apply to it at all. */
+  const VS_COMMON='attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+  const FS_SHELL=[
+    'precision highp float;',
+    'uniform vec2 uRes; uniform float uScale,uDraw,uDis;',
+    'const float PI=3.141592653589793,K=0.174865,R0=8.43,RG=660.0,DTH=0.5235988;',
+    'vec3 ramp(float t){t=clamp(t,0.,1.);',
+    ' vec3 c0=vec3(31.,169.,189.)/255.,c1=vec3(79.,196.,209.)/255.,c2=vec3(166.,220.,226.)/255.,',
+    '      c3=vec3(228.,227.,209.)/255.,c4=vec3(242.,231.,209.)/255.,c5=vec3(235.,214.,168.)/255.,',
+    '      c6=vec3(223.,196.,145.)/255.,c7=vec3(211.,181.,131.)/255.;',
+    ' if(t<.15)return mix(c0,c1,t/.15); if(t<.28)return mix(c1,c2,(t-.15)/.13);',
+    ' if(t<.42)return mix(c2,c3,(t-.28)/.14); if(t<.56)return mix(c3,c4,(t-.42)/.14);',
+    ' if(t<.70)return mix(c4,c5,(t-.56)/.14); if(t<.85)return mix(c5,c6,(t-.70)/.15);',
+    ' return mix(c6,c7,(t-.85)/.15);}',
+    'float hgt(vec2 q,out float fs,out float fr,out float th){',
+    ' float rr=length(q); if(rr<1e-3){fs=0.;fr=0.;th=-1e4;return 0.;}',
+    ' float ph=atan(q.y,q.x); if(ph<0.)ph+=2.*PI;',
+    ' float tt=log(rr/R0)/K, nn=floor((tt-ph)/(2.*PI));',
+    ' fr=(tt-(ph+2.*PI*nn))/(2.*PI); th=ph+2.*PI*(nn+1.);',
+' float off=1.15*(1.-fr)+0.55*sin(PI*fr);',
+' fs=fract(th/DTH-off);',
+    ' float dome=sin(PI*fs)*pow(max(sin(PI*fr),0.),.55);',
+    ' float m=min(fs,1.-fs);',
+    ' float g=(sin(th*118.)*.0040+sin(th*47.+1.7)*.0022+sin(fr*PI*20.)*.0020)',
+'          *smoothstep(.02,.28,fr)*smoothstep(R0*5.,R0*16.,rr);',
+' return dome + smoothstep(.05,0.,m)*.34 + smoothstep(.93,1.,fr)*.26 + g;}',
+    'void main(){',
+    ' vec2 p=(gl_FragCoord.xy-.5*uRes)/uScale; p.y=-p.y;',
+    ' float fs,fr,th; float h=hgt(p,fs,fr,th);',
+    ' float a=1.-smoothstep(uDraw-.45,uDraw,th); if(a<.004) discard;',
+    ' float rr=length(p), e=max(.9,rr*.008), q1,q2,q3;',
+    ' float hx=hgt(p+vec2(e,0.),q1,q2,q3), hy=hgt(p+vec2(0.,e),q1,q2,q3);',
+    ' vec3 N=normalize(vec3(-(hx-h)*1.5/e,(hy-h)*1.5/e,1.));',
+    ' vec3 L=normalize(vec3(-.5,.68,.62)), H=normalize(L+vec3(0.,0.,1.));',
+    ' float diff=max(dot(N,L),0.), spec=pow(max(dot(N,H),0.),16.);',
+    ' vec3 base=ramp(rr/RG);',
+    ' float m=min(fs,1.-fs);',
+    ' float ao=mix(.80,1.,smoothstep(0.,.16,m))*mix(.87,1.,smoothstep(0.,.22,fr));',
+    ' vec3 col=base*(.60+.46*diff)*ao;',
+    ' vec3 ir=.5+.5*cos(6.28318*(vec3(0.,.33,.67)+N.x*.35+N.y*.25+fr*.55));',
+    ' col=mix(col,col*ir*1.12,.035);',
+    ' col+=vec3(1.,.985,.95)*spec*.14;',
+    ' col=mix(col,vec3(.94,.975,.965),smoothstep(R0*3.,R0*.8,rr)*.8);',
+    ' col=mix(col,base*.99,uDis*.7);',
+    ' gl_FragColor=vec4(col*a,a);}'].join('\n');
+
+  function makeGL(FS,OPT){
+    const VS=VS_COMMON; OPT=OPT||{};
+    let gl=null,cv=null,uni={},raf=0,lastD=0,lastS=0,ro=null;
+    const sh=(t,src)=>{const o=gl.createShader(t);gl.shaderSource(o,src);gl.compileShader(o);
+      return gl.getShaderParameter(o,gl.COMPILE_STATUS)?o:null;};
+    function size(){
+      const r=cv.getBoundingClientRect();
+      if(!r.width||!r.height) return false;
+      const dpr=Math.min(window.devicePixelRatio||1,2), over=1.4, cap=3200;
+      let w=Math.round(r.width*dpr*over), h=Math.round(r.height*dpr*over);
+      const k=Math.min(1,cap/Math.max(w,h)); w=Math.round(w*k); h=Math.round(h*k);
+      if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
+      gl.viewport(0,0,w,h);
+      gl.uniform2f(uni.uRes,w,h);
+      gl.uniform1f(uni.uScale,Math.max(w/1120,h/940));
+      return true;
+    }
+    function paint(d,s){
+      if(!gl||!size()) return;
+      lastD=d; lastS=s;
+      gl.uniform1f(uni.uDraw,d); gl.uniform1f(uni.uDis,s);
+      gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLES,0,3);
+    }
+    let bound=false;
+    return {
+      init(stage,svgEl){
+        if(cv){cv.remove();cv=null;gl=null;}
+        cancelAnimationFrame(raf); raf=0;
+        cv=document.createElement('canvas'); cv.className='glshell';
+        stage.insertBefore(cv,svgEl);
+        const opt={alpha:true,premultipliedAlpha:true,antialias:true,depth:false};
+        try{ gl=cv.getContext('webgl',opt)||cv.getContext('experimental-webgl',opt); }catch(e){ gl=null; }
+        if(!gl){cv.remove();cv=null;return false;}
+        const v=sh(gl.VERTEX_SHADER,VS), f=sh(gl.FRAGMENT_SHADER,FS);
+        if(!v||!f){cv.remove();cv=null;gl=null;return false;}
+        const pr=gl.createProgram();
+        gl.attachShader(pr,v); gl.attachShader(pr,f); gl.linkProgram(pr);
+        if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){cv.remove();cv=null;gl=null;return false;}
+        gl.useProgram(pr);
+        const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b);
+        gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+        const loc=gl.getAttribLocation(pr,'a');
+        gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+        ['uRes','uScale','uDraw','uDis'].forEach(n=>uni[n]=gl.getUniformLocation(pr,n));
+        gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+        if(!bound){ bound=true; addEventListener('resize',()=>paint(lastD,lastS)); }
+        if(ro){ ro.disconnect(); ro=null; }
+        if(typeof ResizeObserver!=='undefined'){
+          ro=new ResizeObserver(()=>paint(lastD,lastS));
+          ro.observe(cv);
+        }
+        requestAnimationFrame(()=>paint(lastD,lastS));
+        return true;
+      },
+      play(){
+        if(!gl) return;
+        cancelAnimationFrame(raf);
+        const t0=performance.now(), DRAW=OPT.drawMs||3800, ENDTH=OPT.endDraw||34,
+              DIS_AT=4200, DIS=1800;   /* DIS_AT tracks --t-lines-out */
+        const ease=x=>1-Math.pow(1-x,3);
+        const step=()=>{
+          const t=performance.now()-t0;
+          paint(ease(Math.min(1,t/DRAW))*ENDTH, Math.max(0,Math.min(1,(t-DIS_AT)/DIS)));
+          /* stop once the sequence lands: nothing repaints at rest */
+          raf = (t < DIS_AT+DIS+140) ? requestAnimationFrame(step) : 0;
+        };
+        raf=requestAnimationFrame(step);
+      },
+      still(){ paint(OPT.endDraw||34,1); }
+    };
+  }
+  const GL = makeGL(FS_SHELL);
+
+  /* ---- option 2: the same growth logic read as end grain ----
+     Annual rings instead of chambers: earlywood wide and pale, latewood a thin dark
+     rim, spacing varying year to year, radial checks opening as they run out from
+     the pith. Same height-field-to-normals lighting as the shell. */
+  const FS_RINGS=[
+  'precision highp float;',
+  'uniform vec2 uRes; uniform float uScale,uDraw,uDis;',
+  'const float PI=3.141592653589793;',
+  'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+  'float vn(vec2 p){vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);',
+  ' return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}',
+  'float fbm(vec2 p){float v=0.,a=.5; for(int i=0;i<3;i++){v+=a*vn(p); p*=2.03; a*=.5;} return v;}',
+  'float ringF(vec2 q){',
+  ' float rr=length(q), th=atan(q.y,q.x); vec2 d=vec2(cos(th),sin(th));',
+  ' float wob=((fbm(d*1.7+vec2(rr*.0022))-.5)*52.+(fbm(d*4.3)-.5)*16.)*smoothstep(6.,150.,rr);',
+  ' float rw=max(rr+wob,0.);',
+  ' return rw*.042 + fbm(vec2(rw*.0035,7.3))*3.6;}',
+  'float lateAt(vec2 q){float f=fract(ringF(q));',
+  ' return smoothstep(.76,.94,f)*(1.-smoothstep(.94,1.,f));}',
+  'float crackAt(float th,float rr){ float c=0.;',
+  ' for(int i=0;i<4;i++){ float fi=float(i);',
+  '  float a0=hash(vec2(fi,3.7))*6.2831+(vn(vec2(rr*.006,fi*5.1))-.5)*.7;',
+  '  float dd=abs(mod(th-a0+PI,6.2831)-PI);',
+  '  float w=.004+.03*smoothstep(0.,520.,rr);',
+  '  c=max(c,smoothstep(w,0.,dd)*smoothstep(14.,70.,rr)); }',
+  ' return c;}',
+  'void main(){',
+  ' vec2 p=(gl_FragCoord.xy-.5*uRes)/uScale; p.y=-p.y;',
+  ' float rr=length(p);',
+  ' float a=1.-smoothstep(uDraw,uDraw+60.,rr); if(a<.004) discard;',
+  ' float th=atan(p.y,p.x);',
+  ' float f=fract(ringF(p));',
+  ' float late=smoothstep(.76,.94,f)*(1.-smoothstep(.94,1.,f));',
+  ' float e=max(2.0,rr*.010);',
+  ' float h=lateAt(p), hx=lateAt(p+vec2(e,0.)), hy=lateAt(p+vec2(0.,e));',
+  ' vec3 N=normalize(vec3(-(hx-h)*1.5/e,(hy-h)*1.5/e,1.));',
+  ' vec3 L=normalize(vec3(-.45,.66,.6));',
+  ' float diff=max(dot(N,L),0.), spec=pow(max(dot(N,normalize(L+vec3(0,0,1))),0.),18.);',
+  ' vec3 deep=vec3(.035,.122,.196), blue=vec3(.106,.353,.518), lite=vec3(.329,.749,.918);',
+  ' vec3 gold=vec3(.788,.592,.357), pale=vec3(.894,.835,.706);',
+  ' vec3 col=mix(deep,blue,smoothstep(0.,.45,f));',
+  ' col=mix(col,lite,smoothstep(.30,.68,f)*.72);',
+  ' col=mix(col,vec3(.015,.055,.095),late*.78);',
+  ' col=mix(col,gold,smoothstep(.60,.76,f)*(1.-smoothstep(.76,.86,f))*.85);',
+  ' col*=.90+.2*vn(vec2(th*260.,rr*.9));',
+  ' float warm=smoothstep(.44,.86,fbm(p*.0042+vec2(11.,5.)));',
+  ' col=mix(col,mix(col,gold,.72),warm*.8);',
+  ' col=mix(col,pale,smoothstep(120.,14.,rr)*.85);',
+  ' col*=(.80+.26*diff);',
+  ' col+=vec3(1.,.96,.88)*spec*.06;',
+  ' col=mix(col,vec3(.015,.045,.07),crackAt(th,rr)*.92);',
+  ' col=mix(col,col*.6,uDis*.72);',
+  ' gl_FragColor=vec4(col*a,a);}'].join('\n');
+
+  const GLR = makeGL(FS_RINGS,{endDraw:820});
+
+  function build(){
+  const NS = 'http://www.w3.org/2000/svg';
+  const PHI = (1+Math.sqrt(5))/2;
+  const WHORL = 3.0;                     // a real nautilus opens ~3x per turn (the golden spiral opens ~6.9x)
+  const K = Math.log(WHORL)/(2*Math.PI);
+  const TURNS = 5.15;                   // see below - this is what "no gaps" costs
+  const END = 2*Math.PI*TURNS;
+  const R0 = 8.43;                      // inner coil, identical to the 3.6-turn drawing
+  const RMAX = R0*Math.exp(K*END);      // ~2420u
+  /* The shell is a spiral, not a disc: in any given direction its outer edge is the
+     last whorl to pass that way, so the guaranteed coverage radius is RMAX/WHORL,
+     not RMAX. RMAX/3 = 806u, which clears the viewBox half-diagonal of 731u. */
+  const RGRAD = 660;                    // the ramp's full span; each chamber samples it by radius
+  const RGOLD = 620;                    // the ideal construction meets the wall inside the frame
+  const r = th => R0*Math.exp(K*th);
+  const pt = th => [r(th)*Math.cos(th), r(th)*Math.sin(th)];   // exact - NEVER clamp the radius
+  /* Truncating the wall by PARAMETER is safe: the spiral simply stops early.
+     Clamping the RADIUS inside pt() is not - septum() samples a control point half
+     a turn away, so clamping projected that sample onto a circle, threw the Bezier
+     controls and tore the chambers into self-intersecting shapes. The cost of the
+     outer whorls is handled by clipping to the frame instead (see stage, below). */
+  const THCLIP = Math.min(END+0.6, Math.log(1200/R0)/K);
+  const f = n => n.toFixed(2);
+  const el = (n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e};
+  const spiralPts = (a,b,step=0.04)=>{const o=[];for(let t=a;t<b;t+=step)o.push(pt(t));o.push(pt(b));return o;};
+
+  const defs = el('defs',{});
+  svg.appendChild(defs);
+  defs.innerHTML = `
+    <clipPath id="frame"><rect x="-560" y="-470" width="1120" height="940"/></clipPath>
+    <radialGradient id="core" cx="0" cy="0" r="${R0*7.5}" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EFF7F4"/><stop offset=".4" stop-color="#8FD8DF"/>
+      <stop offset="1" stop-color="#2FB4C6"/>
+    </radialGradient>`;
+  /* preserveAspectRatio="slice" guarantees the visible area is a SUBSET of the
+     viewBox, so clipping to the viewBox never removes anything on screen - it only
+     stops the browser rasterising the ~2200u of whorl that runs off the edges. */
+  const stage = el('g',{'clip-path':'url(#frame)'});
+  svg.appendChild(stage);
+  const g = el('g',{class:'whole'});
+  stage.appendChild(g);
+
+  /* ---- shell: chambers between the spiral and the whorl one turn inside ---- */
+  const SEPTA = 12, dTh = 2*Math.PI/SEPTA, LEAD = 0.6;   // septa lean forward on the outer wall
+  const septum = th => {
+    const [ix,iy] = pt(th-2*Math.PI), [ox,oy] = pt(th+LEAD);
+    const [mx,my] = pt(th-2*Math.PI + (LEAD+2*Math.PI)*0.5);
+    const c = [mx*0.55 + (ix+ox)*0.225, my*0.55 + (iy+oy)*0.225]; // control pulled toward the pole -> concave septum
+    return {ix,iy,ox,oy,c};
+  };
+  /* ---- nacre ramp, sampled per chamber ----
+     A single shared gradient makes every chamber a slice of one smooth ramp, which
+     is why the shell read flat. A real nautilus models each chamber as its own
+     volume: brightest along the outer wall, falling off toward the pole. So each
+     chamber gets its own linear gradient down its radial axis, coloured from this
+     ramp at its own inner and outer radius. */
+  const RAMP=[[0,[31,169,189]],[.15,[79,196,209]],[.28,[166,220,226]],[.42,[228,227,209]],
+              [.56,[242,231,209]],[.70,[235,214,168]],[.85,[223,196,145]],[1,[211,181,131]]];
+  const ramp = t => {
+    t = Math.max(0,Math.min(1,t));
+    for(let n=1;n<RAMP.length;n++){
+      if(t<=RAMP[n][0]){
+        const [t0,c0]=RAMP[n-1],[t1,c1]=RAMP[n], u=(t1===t0)?0:(t-t0)/(t1-t0);
+        return c0.map((v,k)=>v+(c1[k]-v)*u);
+      }
+    }
+    return RAMP[RAMP.length-1][1];
+  };
+  const shade = (c,f)=>'rgb('+c.map(v=>Math.max(0,Math.min(255,Math.round(v*f)))).join(',')+')';
+
+  /* fills below, linework above and on its own layer so it can fade as one object */
+  const fills = el('g',{}), lines = el('g',{class:'lines'});
+  g.appendChild(fills); g.appendChild(lines);
+  const glOK = GL.init(svg.parentNode, svg);
+  let i = 0;
+  for(let th = 2*Math.PI; !glOK && th+dTh <= END+1e-9; th += dTh, i++){
+    const a = septum(th), b = septum(th+dTh);
+    const outer = spiralPts(th+LEAD, th+dTh+LEAD).map(([x,y])=>`L${f(x)} ${f(y)}`).join('');
+    const inner = spiralPts(th-2*Math.PI, th+dTh-2*Math.PI).reverse().map(([x,y])=>`L${f(x)} ${f(y)}`).join('');
+    const d = `M${f(a.ix)} ${f(a.iy)} Q${f(a.c[0])} ${f(a.c[1])} ${f(a.ox)} ${f(a.oy)} ${outer} Q${f(b.c[0])} ${f(b.c[1])} ${f(b.ix)} ${f(b.iy)} ${inner} Z`;
+    /* shade this chamber down its own radial axis: dark at the pole side,
+       highlight just inside the outer wall, easing off at the wall itself */
+    const thm = th + dTh/2;
+    const [gix,giy] = pt(thm-2*Math.PI), [gox,goy] = pt(thm+LEAD);
+    const rIn = r(thm-2*Math.PI), rOut = r(thm+LEAD);
+    const rG  = Math.min(rOut, rIn + 210);
+    const k2  = (rG-rIn)/(rOut-rIn);
+    const gx  = gix+(gox-gix)*k2, gy = giy+(goy-giy)*k2;
+    const cIn = ramp(rIn/RGRAD), cMid = ramp(((rIn+rG)/2)/RGRAD), cOut = ramp(rG/RGRAD);
+    const gid = 'ch'+i;
+    const lg = el('linearGradient',{id:gid,gradientUnits:'userSpaceOnUse',
+                                    x1:f(gix),y1:f(giy),x2:f(gx),y2:f(gy)});
+    [[0,shade(cIn,.88)],[.5,shade(cMid,1.00)],[.85,shade(cOut,1.09)],[1,shade(cOut,1.05)]]
+      .forEach(([o,col])=>lg.appendChild(el('stop',{offset:o,'stop-color':col})));
+    defs.appendChild(lg);
+    const ch = el('path',{d,class:'chamber',fill:'url(#'+gid+')'});
+    ch.style.animationDelay = (0.35+i*0.07)+'s';
+    fills.appendChild(ch);
+    const ed = el('path',{d,class:'edge'});          // the chamber outline, now its own object
+    ed.style.animationDelay = (0.35+i*0.07)+'s, var(--t-lines-out)';
+    lines.appendChild(ed);
+    const sp = el('path',{d:`M${f(a.ix)} ${f(a.iy)} Q${f(a.c[0])} ${f(a.c[1])} ${f(a.ox)} ${f(a.oy)}`,class:'septum'});
+    sp.style.animationDelay = (0.4+i*0.07)+'s, var(--t-lines-out)';
+    lines.appendChild(sp);
+  }
+  // innermost whorl
+  const core = el('path',{d:'M'+spiralPts(0,2*Math.PI+LEAD).map(([x,y])=>`${f(x)} ${f(y)}`).join('L')+' L0 0 Z',class:'chamber',fill:'url(#core)'});
+  if(!glOK) fills.appendChild(core);
+  // outer wall drawn from the pole outward
+  lines.appendChild(el('path',{d:'M'+spiralPts(0,THCLIP).map(([x,y])=>`${f(x)} ${f(y)}`).join('L'),class:'wall','stroke-width':3.4,pathLength:1}));
+
+  /* ---- golden section overlay: squares growing by phi, quarter arcs through them ---- */
+  let bx=0,by=0,bw=1,bh=1;            // bounding rect of squares so far
+  const squares=[], rectsSeq=[[0,0,1,1]];
+  let arc='';
+  for(let n=0;n<9;n++){
+    const dir=n%4, s=Math.max(bw,bh);
+    let x,y;
+    if(dir===0){x=bx+bw; y=by;}        // right
+    if(dir===1){x=bx; y=by+bh;}        // below
+    if(dir===2){x=bx-s; y=by;}         // left
+    if(dir===3){x=bx; y=by-s;}         // above
+    if(n===0){x=0;y=0;}                // first square is the seed itself
+    if(n>0){
+      const nbx=Math.min(bx,x), nby=Math.min(by,y);
+      bw=Math.max(bx+bw,x+s)-nbx; bh=Math.max(by+bh,y+s)-nby; bx=nbx; by=nby;
+      rectsSeq.push([bx,by,bw,bh]);
+    }
+    squares.push([x,y,s]);
+    const st=[[x,y],[x+s,y],[x+s,y+s],[x,y+s]][dir], en=[[x+s,y+s],[x,y+s],[x,y],[x+s,y]][dir];
+    arc += (n===0?`M${st[0]} ${st[1]} `:'') + `A${s} ${s} 0 0 1 ${en[0]} ${en[1]} `;
+  }
+  // pole of the arc spiral: P satisfies E - P = phi*R(E2 - P) for successive arc ends E2, E (R = quarter turn)
+  const endOf=([x,y,s],dir)=>[[x+s,y+s],[x,y+s],[x,y],[x+s,y]][dir];
+  const N=squares.length, E=endOf(squares[N-1],(N-1)%4), E2=endOf(squares[N-2],(N-2)%4), E3=endOf(squares[N-3],(N-3)%4);
+  const solve=(sg)=>{ // R = [[0,-sg],[sg,0]]
+    const q=1+PHI*PHI, v=[E[0]-PHI*(-sg*E2[1]), E[1]-PHI*(sg*E2[0])];
+    return [(v[0]-PHI*sg*v[1])/q, (PHI*sg*v[0]+v[1])/q];
+  };
+  const err=(P,sg)=>{const d=[E2[0]-P[0]-PHI*(-sg*(E3[1]-P[1])), E2[1]-P[1]-PHI*(sg*(E3[0]-P[0]))];return Math.hypot(d[0],d[1]);};
+  let pole=solve(1); if(err(solve(-1),-1)<err(pole,1)) pole=solve(-1);
+  // match the shell: the arc's outer end sits on the wall where the wall passes through RGOLD
+  const dx=E[0]-pole[0], dy=E[1]-pole[1], dE=Math.hypot(dx,dy), aE=Math.atan2(dy,dx);
+  const thGold=Math.log(RGOLD/R0)/K;
+  const k=RGOLD/dE, rot=(thGold-aE)*180/Math.PI;
+  const gold = el('g',{transform:`rotate(${rot}) scale(${k}) translate(${-pole[0]} ${-pole[1]})`});
+  lines.appendChild(gold);
+  squares.forEach(([x,y,s],n)=>{
+    const rc=el('rect',{x,y,width:s,height:s,class:'gold-rect',style:`stroke-width:${1/k}px`});
+    rc.style.animationDelay=`calc(var(--t-lines-out) + ${(n*0.07).toFixed(2)}s)`; gold.appendChild(rc);
+  });
+  const ap=el('path',{d:arc,class:'gold',pathLength:1,style:`stroke-width:${1.8/k}px`});
+  gold.appendChild(ap);
+  }
+
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  build();
+  REDUCED ? GL.still() : GL.play();
+
+  function restart(sel){
+    const n=document.querySelector(sel); if(!n) return;
+    n.style.animation='none'; void n.offsetWidth; n.style.animation='';   // force reflow
+  }
+  function replayShell(){
+    svg.textContent=''; build();
+    REDUCED ? GL.still() : GL.play();
+    restart('.scene-shell .wave'); restart('.scene-shell .name');
+  }
+
+  /* option 2 is built lazily: no reason to compile a shader nobody has swiped to */
+  let ringsReady=false;
+  function playRings(){
+    const sc=document.querySelector('.scene-rings'),
+          st=document.querySelector('.stage-rings');
+    if(!sc||!st) return;
+    if(!ringsReady) ringsReady = GLR.init(st,null);
+    sc.classList.remove('run'); void sc.offsetWidth; sc.classList.add('run');
+    REDUCED ? GLR.still() : GLR.play();
+  }
+
+  /* ---- swipe / arrow keys between the two options ---- */
+  let active=0;
+  (function(){
+    const hero=document.querySelector('.hero'),
+          track=document.getElementById('track'),
+          dots=document.getElementById('dots');
+    if(!hero||!track||!dots) return;
+    const scenes=[...track.children];
+    let w=0,x0=0,drag=false,moved=0;
+    scenes.forEach((sc,i)=>{
+      const b=document.createElement('button');
+      b.type='button'; b.className='dot'; b.setAttribute('role','tab');
+      b.setAttribute('aria-label', sc.getAttribute('aria-label')||('Opzione '+(i+1)));
+      b.addEventListener('click',()=>go(i));
+      dots.appendChild(b);
+    });
+    const put=px=>{ track.style.transform='translate3d(calc('+(-active*100)+'% + '+px+'px),0,0)'; };
+    function go(i,instant){
+      i=Math.max(0,Math.min(scenes.length-1,i));
+      const changed=i!==active; active=i;
+      track.style.transition = instant ? 'none' : 'transform .55s var(--ease-through)';
+      put(0);
+      hero.setAttribute('data-scene',String(active));
+      [...dots.children].forEach((d,n)=>d.setAttribute('aria-selected', n===active?'true':'false'));
+      scenes.forEach((sc,n)=>sc.setAttribute('aria-hidden', n===active?'false':'true'));
+      if(changed && active===1) playRings();
+    }
+    hero.addEventListener('pointerdown',e=>{
+      if(e.target.closest('button')) return;
+      drag=true; moved=0; x0=e.clientX; w=hero.clientWidth;
+      track.style.transition='none';
+      try{ hero.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    hero.addEventListener('pointermove',e=>{
+      if(!drag) return;
+      moved=e.clientX-x0;
+      if((active===0&&moved>0)||(active===scenes.length-1&&moved<0)) moved*=.32;  // resist at the ends
+      put(moved);
+    });
+    const end=()=>{ if(!drag) return; drag=false;
+      const t=Math.max(40,w*.16);
+      go(moved<-t ? active+1 : moved>t ? active-1 : active);
+    };
+    hero.addEventListener('pointerup',end);
+    hero.addEventListener('pointercancel',end);
+    hero.tabIndex=0;
+    hero.addEventListener('keydown',e=>{
+      if(e.key==='ArrowRight'){ e.preventDefault(); go(active+1); }
+      if(e.key==='ArrowLeft'){ e.preventDefault(); go(active-1); }
+    });
+    addEventListener('resize',()=>{ track.style.transition='none'; put(0); });
+    go(0,true);
+  })();
+
+  const btn = document.getElementById('replay');
+  if(btn) btn.addEventListener('click',()=>{ active===0 ? replayShell() : playRings(); });
+})();
+
+/* ===== rail scroll-spy ===== */
+(function(){
+  const links = [...document.querySelectorAll('.rail a')];
+  if(!links.length) return;
+  const map = new Map(links.map(a=>[a.getAttribute('href').slice(1), a]));
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      const a = map.get(e.target.id);
+      if(!a) return;
+      if(e.isIntersecting){ links.forEach(l=>l.classList.remove('on')); a.classList.add('on'); }
+    });
+  },{rootMargin:'-12% 0px -74% 0px'});
+  document.querySelectorAll('.sec').forEach(s=>io.observe(s));
+})();
+</script>
